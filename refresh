@@ -1,0 +1,8 @@
+echo "refresh lex ... ..."
+flex ryt.l
+echo "re-compile lex.yy.c:   gcc lex.yy.c -o parser -ll"
+gcc lex.yy.c -o parser -ll
+
+echo "try parse test.ryl"
+./parser<test.ryl
+
