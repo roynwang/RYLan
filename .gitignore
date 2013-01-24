@@ -15,3 +15,7 @@
 *.exe
 *.out
 *.app
+
+#tmp file
+lex.yy.c
+parser

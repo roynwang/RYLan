@@ -1,3 +1,5 @@
+echo "refresh yac ... ..."
+yacc ryt.y
 echo "refresh lex ... ..."
 flex ryt.l
 echo "re-compile lex.yy.c:   gcc lex.yy.c -o parser -ll"
