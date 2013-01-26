@@ -1,1 +1,1 @@
-i ="test";i = "2222";
+fun test{assignstmt=1;callstmt;} 

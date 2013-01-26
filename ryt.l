@@ -2,24 +2,36 @@
 #include "y.tab.c"  
 #include <stdio.h>
 #include <string.h>
+
+void debugmsg(char* msg);
 %}
+
 delim       [ \t\n]
 ws          {delim}+
 letter      [A-Za-z]
 digit       [0-9]
-assign      [=]
+assign      =
 id          {letter}({letter}|{digit})*
 strvalue    \"({letter}|{digit})*\"
 end         ;
+number      {digit}+
+fun         fun
 
 %%
 {ws}              {}
-{id}              { yylval = strdup(yytext); return VARNAME; }
+"fun"             { debugmsg("FUN"); return FUN;}
+{id}              { yylval.str = strdup(yytext); debugmsg(yytext); return symbol; }
 {assign}          { return ASSIGN; }
-{strvalue}        { yylval = strdup(yytext); return STRVALUE; }
-{end}             { yylval = strdup(yytext); return END;}
+{end}             { return SEMC;}
+{number}          { yylval.value = atoi(yytext); debugmsg(yytext); return expr;}
+"{"               { return BLOCKSTART;}
+"}"               { return BLOCKEND;}
 %%
 int yywrap()
 {
 		return 1;
+}
+void debugmsg(char* msg){
+	if(DEBUG & LEXDEBUG)
+		printf("[LEX] %s\n", msg);
 }
