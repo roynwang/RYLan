@@ -37,6 +37,6 @@ main ( int argc, char *argv[] )
 	addItem(myhash, "cde", &cde);
 	printf("Item abc = %d\n",*((int*)getItem(myhash, "abc")));
 	printf("Item cde = %s\n",*((char**)getItem(myhash,"cde")));
-	freeHash(&myhash);
+	freeHash(myhash);
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

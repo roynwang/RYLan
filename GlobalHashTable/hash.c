@@ -21,7 +21,7 @@
 #include "hash.h"
 
 size_t getBKDRHash(const char* input, size_t hashsize){
-	unsigned int hash = 1;
+	size_t hash = 0;
 	const char *p = input;
 	while (*p){
 		hash =  (unsigned int)(*p) + hash*BKDRSEED;
@@ -31,28 +31,28 @@ size_t getBKDRHash(const char* input, size_t hashsize){
 }
 
 Hash initHash(size_t size){
-	Hash *ret = (Hash*)malloc(sizeof(Hash));
+	Hash ret = (Hash)malloc(sizeof(structHash));
 	ret->size = size;
 	ret->table = (void**)malloc(sizeof(void*)*size);
 	unsigned tmp = size;
 	while(tmp>0){
 		ret->table[--tmp] = NULL;
 	}
-	return *ret;
+	return ret;
 }
-void freeHash(Hash *hash){
+void freeHash(Hash hash){
 	//need to free all items
 	free(hash->table);
 }
 
 void addItem(Hash hash, const char* name, void* value){
-	hash.table[getBKDRHash(name,hash.size)] = value;
+	hash->table[getBKDRHash(name,hash->size)] = value;
 }
 void removeItem(Hash hash,const char* name){
-	hash.table[getBKDRHash(name,hash.size)] = NULL;
+	hash->table[getBKDRHash(name,hash->size)] = NULL;
 }
 void* getItem(Hash hash, const char* name){
-	return hash.table[getBKDRHash(name, hash.size)];
+	return hash->table[getBKDRHash(name, hash->size)];
 }
 
 

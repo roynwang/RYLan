@@ -21,12 +21,12 @@
 typedef struct {
 	size_t size;
 	void** table;
-} Hash;
+} structHash, *Hash;
 
 size_t getBKDRHash(const char* input, size_t hashsize);
 
 Hash initHash(size_t size);
-void freeHash(Hash *hash);
+void freeHash(Hash hash);
 
 void addItem(Hash hash, const char* name, void* value);
 void removeItem(Hash hash, const char* name);
