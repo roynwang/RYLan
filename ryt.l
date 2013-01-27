@@ -19,6 +19,7 @@ fun         fun
 
 %%
 {ws}              {}
+"run"             { debugmsg("RUN"); return RUN;}
 "fun"             { debugmsg("FUN"); return FUN;}
 {id}              { yylval.str = strdup(yytext); debugmsg(yytext); return symbol; }
 {assign}          { return ASSIGN; }

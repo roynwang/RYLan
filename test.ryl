@@ -1,1 +1,3 @@
-fun test{assignstmt=1;callstmt;} 
+fun test{ var=12;} 
+run;
+

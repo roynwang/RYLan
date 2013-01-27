@@ -17,14 +17,15 @@
  */
 #define LEXDEBUG 1
 #define YACCDEBUG 2
-typedef enum {NONE, AssignOP} opEnum;
+typedef enum {NONE, AssignOp, AddOp} opEnum;
 typedef struct _exUnit{
-	char* cName;
+	char* varName;
+	int intValue;
 	opEnum op;
-	int iValue;
 	struct _exUnit* next;
+	int ret;
 } Node;
 int VarList[256];
-int DEBUG = 3;
+int DEBUG;
 
-void ex(Node* node);
+int ex(Node* node);

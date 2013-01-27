@@ -16,12 +16,19 @@
  * =====================================================================================
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include "utility.h"
 
+int DEBUG = 3;
 int ex(Node* node){
-	if(node->op == AssignOP){
-		VarList[*(node->symbol)] =  ex(node->next);
-		return VarList[*(node->symbol)];
+	printf("[3] Calculating ");
+	if(node->op == AssignOp){
+		printf("ASSIGN ");
+		printf("SYMBOL::%s value:: %d\n",node->varName, node->intValue);
+		return 0xFFFF;
+	}
+	if(node->op == AddOp){
+		return node->intValue + ex(node);
 	}
 	if(node->next != NULL)
 		ex(node->next);

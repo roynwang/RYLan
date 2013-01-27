@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "utility.h"
-void* funlist[10];
+Node* fun;
 
 Node* installSymbolAssign(char* id, int exp);
 Node* installFun(char* id, Node* body);
+void  execute();
 void  yyerror(char*s);
 
 void* cur = NULL;
@@ -18,23 +19,28 @@ char* curFun;
 	int value;
 	Node *node; /* 结点地址 */
 }
-%token  ASSIGN  SEMC FUN BLOCKSTART BLOCKEND
+%token  ASSIGN  SEMC FUN BLOCKSTART BLOCKEND RUN
 %token <str>  symbol
 %token <value> expr
 %type  <node> stmtlist stmt
 %%
-fundef         :   FUN symbol BLOCKSTART stmtlist BLOCKEND                {printf("fundef: %s \n", $2);
-installFun($2, $4);
-}
+prog           :   fundefs RUN SEMC                                       { execute();}
                ;
-stmtlist       :   stmtlist stmt                 {printf("!!!!!!!statement\n");
-}
 
-               |   stmt                          {}
+fundefs        :   fundefs fundef
+               |   fundef 
+			   ;
+
+fundef         :   FUN symbol BLOCKSTART stmtlist BLOCKEND                {printf("fundef: %s \n", $2);
+                                                                           installFun($2, $4);
+                                                                          }
                ;
-stmt           :   symbol SEMC                                            {printf("add stmt: CALL  %s \n", $1);}
-               |   symbol ASSIGN expr SEMC                                {printf("add stmt: ASSIGN %s \n", $1);
-$$ = installSymbolAssign($1,$3);
+stmtlist       :   stmtlist stmt                                          {printf("!!!!!!!statement\n");}
+
+               |   stmt                                                   {}
+               ;
+stmt           :   symbol ASSIGN expr SEMC                                {printf("add stmt: ASSIGN %s \n", $1);
+                                                                           $$ = installSymbolAssign($1,$3);
 			   }
 			   ;
 %%
@@ -42,13 +48,18 @@ $$ = installSymbolAssign($1,$3);
 Node* installSymbolAssign(char* id, int exp){
 	printf("install symbol assign --- %s %d\n", id, exp);
 	Node* ret = (Node*)malloc(sizeof(Node));
-	ret->cName = id;
-	ret->iValue = exp;
+	ret->varName = id;
+	ret->op = AssignOp;
+	ret->intValue = exp;
 	return ret;
 }
 Node* installFun(char* id, Node* body){
 	printf("install function  %s: %p\n", id, body);
-	funlist[0] = body;
+	fun = body;
+}
+void execute(){
+	printf("Executing function %p \n", fun);
+	ex(fun);
 }
 int main(){
 	yyparse();
@@ -57,3 +68,4 @@ int main(){
 void yyerror(char *s) { 
 	    fprintf(stdout, "%s\n", s); 
 }
+
