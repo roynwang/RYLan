@@ -29,3 +29,4 @@ typedef struct _Node{
 }Node;
 
 Data Ex(Node* node);
+void freeNode(Node* node);

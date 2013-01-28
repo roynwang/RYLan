@@ -44,7 +44,7 @@ void freeHash(Hash hash){
 	free(hash->table);
 }
 
-void addItem(Hash hash, const char* name, void* value){
+void setItem(Hash hash, const char* name, void* value){
 	hash->table[getBKDRHash(name,hash->size)] = value;
 }
 

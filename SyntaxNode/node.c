@@ -18,19 +18,24 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "node.h"
+#include <stdio.h>
 Data Ex(Node* node){
-	if(node->op = GET){
-		        return *(node->data);
+	if(node->op == GET){
+		printf ( "Executing GET ... ...\n" );
+		return *(node->data);
 	}
 	if(node->op == ASSIGN){
+		printf ( "Executing ASSIGN ... ...\n" );
 		char* name = Ex(node->left).value.varValue;
 		Data src = Ex(node->right);
 		Data* dest = (Data*)malloc(sizeof(Data));
 		memcpy(dest, &src, sizeof(src));
-		setItem(node->localvars, name, dest);
+		printf ( "ASSIGN: Name = %s value = %d\n", name, dest->value.intValue );
+		setItem(node->localvars, name, (void*)dest);
 		return *dest;
 	}
 	if(node->op == ADD){
+		printf ( "Executing ADD ... ...\n" );
 		Data l = Ex(node->left);
 		Data r = Ex(node->right);
 		return adddata(node->localvars, &l, &r);
@@ -51,3 +56,12 @@ Data Ex(Node* node){
 		return divdata(node->localvars,&l,&r);
 	}
 }
+
+void freeNode(Node* node){
+	if(node!=NULL){
+		freeNode(node->left);
+		freeNode(node->right);
+		free(node);
+	}
+}
+

@@ -20,7 +20,7 @@ utility.o: utility.h utility.c
 
 
 test: $(TEST)/hashtest.c dataunit.o node.o hash.o
-	$(CC) $(TEST)/hashtest.c dataunit.o node.o hash.o -o ParserTest
+	$(CC) $(TEST)/hashtest.c dataunit.o node.o hash.o -o StructureTest
 
 dataunit.o: hash.o $(HASH)/dataunit.h $(HASH)/dataunit.c
 	$(CC) -c $(HASH)/dataunit.h $(HASH)/dataunit.c hash.o
@@ -34,6 +34,6 @@ node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c
 
 
 clean:
-	rm *.o lex.yy.c y.tab.c *~ $(PARSER)  ParserTest
+	rm *.o lex.yy.c y.tab.c *~ $(PARSER) StructureTest
 
 

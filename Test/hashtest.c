@@ -30,6 +30,7 @@
 	int
 main ( int argc, char *argv[] )
 {
+	printf ( "==================hash test=================\n" );
 	//test hash
 	const size_t hashsize = 65536;
 	Hash myhash = initHash(hashsize);
@@ -49,10 +50,10 @@ main ( int argc, char *argv[] )
 	v4->value.intValue = 333;
 	v4->valueType = IntType;
 
-	addItem(myhash, "abc", v1);
-	addItem(myhash, "cde", v2);
-	addItem(myhash, "int1",v3);
-	addItem(myhash, "int2",v4);
+	setItem(myhash, "abc", v1);
+	setItem(myhash, "cde", v2);
+	setItem(myhash, "int1",v3);
+	setItem(myhash, "int2",v4);
 	
 	Data* get1 = ((Data*)getItem(myhash,"abc" ));
 	Data* get2 = ((Data*)getItem(myhash,"cde" ));
@@ -81,6 +82,50 @@ main ( int argc, char *argv[] )
 	Data result2 = adddata(myhash, d3,d4);
 	printf("expected 12test / actual result %s\n",result1.value.strValue);
 	printf("expected 555    / actual result %d\n",result2.value.intValue);
+
+	printf ( "============================================\n" );
+	printf ( "==================Node test=================\n" );
+
+	Node* head = (Node*)malloc(sizeof(Node));
+	head->op = ADD;
+	head->localvars = myhash;
+
+	Node* left = (Node*)malloc(sizeof(Node));
+	Node* right = (Node*)malloc(sizeof(Node));
+	head->left = left;
+	head->right = right;
+	
+	left->op = GET;
+	left->data = d3;
+	right->op = GET;
+	right->data = d4;
+
+	Data result3 = Ex(head);
+	printf("expected 555    / actual result %d\n",result3.value.intValue);
+	
+
+	Node* nested = (Node*)malloc(sizeof(Node));
+	nested->op = ASSIGN;
+	nested->left  = left; 
+	nested->right = head;
+	nested->localvars = myhash;
+	Ex(nested);
+	result3 = *(Data*)getItem(myhash,"int1");
+	printf("expected 555    / actual result %d\n",result3.value.intValue);
+	Ex(nested);
+	result3 = *(Data*)getItem(myhash,"int1");
+	printf("expected 888    / actual result %d\n",result3.value.intValue);
+
+
+	left->data = d1;
+	right->data = d2;
+
+	result3 = Ex(head);
+	printf("expected 12test / actual result %s\n",result3.value.strValue);
+
+	printf ( "============================================\n" );
 	freeHash(myhash);
+	freeNode(head);
+
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
