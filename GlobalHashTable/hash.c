@@ -17,7 +17,6 @@
  */
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include "hash.h"
 
 size_t getBKDRHash(const char* input, size_t hashsize){
@@ -48,6 +47,7 @@ void freeHash(Hash hash){
 void addItem(Hash hash, const char* name, void* value){
 	hash->table[getBKDRHash(name,hash->size)] = value;
 }
+
 void removeItem(Hash hash,const char* name){
 	hash->table[getBKDRHash(name,hash->size)] = NULL;
 }
