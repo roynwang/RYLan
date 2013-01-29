@@ -15,10 +15,20 @@
  *
  * =====================================================================================
  */
+
+#ifndef  NODE_INC
+#define  NODE_INC
+
 #include "../GlobalHashTable/dataunit.h"
 #include "../GlobalHashTable/hash.h"
 typedef enum { 
-	ASSIGN, GET, ADD, SUB, MUL,DIV
+	NONE,
+	ASSIGN, GET,
+	ADD, SUB, MUL,DIV, 
+	IF, 
+	NOT,
+	EXE,
+	ST
 }OpEnum;
 typedef struct _Node{
 	int op;
@@ -30,3 +40,11 @@ typedef struct _Node{
 
 Data Ex(Node* node);
 void freeNode(Node* node);
+Node* createVar(char* name);
+Node* createStr(char* value);
+Node* createInt(int value);
+
+Node* createComplex(int op , Node* left, Node* right, Hash localvars);
+Node* createIF(Node* expr, Node* thenstmt, Hash localvars);
+
+#endif   /* ----- #ifndef NODE_INC  ----- */

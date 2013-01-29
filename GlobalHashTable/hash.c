@@ -33,15 +33,27 @@ Hash initHash(size_t size){
 	Hash ret = (Hash)malloc(sizeof(structHash));
 	ret->size = size;
 	ret->table = (void**)malloc(sizeof(void*)*size);
-	unsigned tmp = size;
+	unsigned int tmp = size;
 	while(tmp>0){
 		ret->table[--tmp] = NULL;
 	}
 	return ret;
 }
 void freeHash(Hash hash){
+	if(hash == NULL) return;
 	//need to free all items
-	free(hash->table);
+
+	if(hash->table != NULL){
+		unsigned int tmp = hash->size;
+		while(tmp>0){
+			tmp --;
+			if(hash->table[tmp]!=NULL)
+				free(hash->table[tmp]);
+		}
+		free(hash->table);
+		hash->table = NULL;
+	}
+	free(hash);
 }
 
 void setItem(Hash hash, const char* name, void* value){

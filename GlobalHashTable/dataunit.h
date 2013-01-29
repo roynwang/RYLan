@@ -21,19 +21,32 @@
 
 #include "hash.h"
 
-typedef enum { IntType, StrType, VarType} TypeEnum;
-typedef struct {
+#define TRUE trueData
+#define FALSE falseData
+
+typedef enum { IntType, StrType, VarType, True, False, Empty} TypeEnum;
+typedef struct _Data{
 	int valueType;
 	union {
+		const char* strValue;
 		int intValue;
-		char* strValue;
-		char* varValue;
-	} value;
+		const char* varValue;
+	}value;
 }Data;
+Data trueData ;
+Data falseData;
+
+Data* createIntData(int value);
+Data* createStrData(char* value);
+Data* createVarData(char* name);
+
 
 Data adddata(Hash hash, Data* left, Data* right);
 Data subdata(Hash hash, Data* left, Data* right);
 Data muldata(Hash hash, Data* left, Data* right);
 Data divdata(Hash hash, Data* left, Data* right);
-
+Data comparedata(Hash hash, Data* left, Data* right);
+Data* createEmptyData();
+char* toString(Data* data);
+int isTrue(Data* data);
 #endif   /* ----- #ifndef DATAUNIT_INC  ----- */

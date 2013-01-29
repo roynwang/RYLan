@@ -18,6 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dataunit.h"
+#include <stdio.h>
+
+Data trueData = {valueType: True};
+Data falseData = {valueType: False};
+
 
 void typecheck(Data* left, Data* right){
 	if(left->valueType!= right->valueType){
@@ -25,10 +30,10 @@ void typecheck(Data* left, Data* right){
 	}
 }
 int isInt(Data* data){
-	return data->valueType == IntType;
+	return data->valueType == IntType ? 1:0;
 }
 int isStr(Data* data){
-	return data->valueType == StrType;
+	return data->valueType == StrType ? 1:0;
 }
 Data* getValue(Hash hash, Data* data){
 	if(data->valueType == VarType){
@@ -88,4 +93,50 @@ Data divdata(Hash hash, Data* left, Data* right){
 	free(right);
 	return ret;
 }
+Data comparedata(Hash hash, Data* left, Data* right){
+	Data ret;
+	ret.valueType = Empty;
+	left = getValue(hash,left);
+	right = getValue(hash,right);
+	if(!isInt(left) || !isInt(right))
+		exit(0);
+	if(left->value.intValue<right->value.intValue){
+		ret.value.intValue = -1;
+	}
+	else if(left->value.intValue>right->value.intValue)
+		ret.value.intValue = 1;
+	else
+		ret.value.intValue = 0;
+	return ret;
+}
+Data* createEmptyData(){
+	Data* ret = (Data*)malloc(sizeof(Data));
+	ret->valueType = Empty;
+	return ret;
+}
+char* toString(Data* data){
+	return "NEED TO IMPLEMENT toString()\n";
+}
+Data* createVarData(char* name){
+	Data* ret = createEmptyData();
+	ret->valueType = VarType;
+	ret->value.varValue = name;
+	return ret;
+}
+Data* createStrData(char* value){
+	Data* ret = createEmptyData();
+	ret->valueType = StrType;
+	ret->value.strValue  = value;
+	return ret;
+}
+Data* createIntData(int value){
+	Data* ret = createEmptyData();
+	ret->valueType = IntType;
+	ret->value.intValue = value;
+	return ret;
+}
+int isTrue(Data* data){
+	return data->valueType == True? 1:0;
+}
+
 
