@@ -32,7 +32,7 @@ size_t getBKDRHash(const char* input, size_t hashsize);
 Hash initHash(size_t size);
 void freeHash(Hash hash);
 
-void addItem(Hash hash, const char* name, void* value);
+void setItem(Hash hash, const char* name, void* value);
 void removeItem(Hash hash, const char* name);
 void* getItem(Hash hash, const char* name);
 

@@ -135,6 +135,13 @@ Data* createIntData(int value){
 	ret->value.intValue = value;
 	return ret;
 }
+Data* createArrayData(ArrayUnit *arr){
+	Data* ret = createEmptyData();
+	ret->valueType = ArrayType;
+	ret->value.arrayValue = arr;
+	
+}
+
 int isTrue(Data* data){
 	return data->valueType == True? 1:0;
 }

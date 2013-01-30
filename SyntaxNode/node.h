@@ -27,8 +27,11 @@ typedef enum {
 	ADD, SUB, MUL,DIV, 
 	IF, 
 	NOT,
-	EXE,
-	ST
+	STMT,
+	ST, LT, NS, NL, EQ,
+	PARAMS,
+	FUN,
+	FUNCALL
 }OpEnum;
 typedef struct _Node{
 	int op;
@@ -43,8 +46,16 @@ void freeNode(Node* node);
 Node* createVar(char* name);
 Node* createStr(char* value);
 Node* createInt(int value);
+Node* createArray(ArrayUnit *arr);
 
 Node* createComplex(int op , Node* left, Node* right, Hash localvars);
 Node* createIF(Node* expr, Node* thenstmt, Hash localvars);
+Node* createFUN(Node* paramslist, Node* stmts, Hash localvars);
+Node* createSTMTS(Node* stmt, Node* stmts, Hash localvars);
+Node* createPARAMS(Node* param, Node* params);
+Node* createPARAM(char* name, Hash localvars);
+Node* createFUNCALL(Hash funHash, char* name, ArrayUnit* paramslist, Hash localvars);
+
+Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 
 #endif   /* ----- #ifndef NODE_INC  ----- */

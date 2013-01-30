@@ -29,7 +29,7 @@ hash.o: $(HASH)/hash.h $(HASH)/hash.c
 	$(CC) -c $(HASH)/hash.h $(HASH)/hash.c 
 
 node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c
-	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c
+	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c 
 
 
 

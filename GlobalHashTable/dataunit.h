@@ -24,22 +24,29 @@
 #define TRUE trueData
 #define FALSE falseData
 
-typedef enum { IntType, StrType, VarType, True, False, Empty} TypeEnum;
+typedef struct _ArrayUnit{
+	void* data;
+	struct _ArrayUnit * next;	
+} ArrayUnit;
+
+typedef enum { IntType, StrType, VarType, True, False, Empty, ArrayType} TypeEnum;
 typedef struct _Data{
 	int valueType;
 	union {
 		const char* strValue;
 		int intValue;
 		const char* varValue;
+		ArrayUnit* arrayValue;
 	}value;
 }Data;
+
 Data trueData ;
 Data falseData;
 
 Data* createIntData(int value);
 Data* createStrData(char* value);
 Data* createVarData(char* name);
-
+Data* createArrayData(ArrayUnit* arr);
 
 Data adddata(Hash hash, Data* left, Data* right);
 Data subdata(Hash hash, Data* left, Data* right);

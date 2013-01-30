@@ -21,6 +21,57 @@
 #include "../GlobalHashTable/dataunit.h"
 #include "../SyntaxNode/node.h"
 
+void funtest(){
+
+	printf ( "==================fun test=================\n" );
+	Hash varshash = initHash(65536);
+	Hash funhash = initHash(65536);
+	setItem(varshash, "int1",createIntData(222));
+	setItem(varshash, "int2",createIntData(333));
+
+	ArrayUnit * paramlist = (ArrayUnit*)malloc(sizeof(ArrayUnit));
+	paramlist->data = getItem(varshash, "int1");
+	paramlist->next = NULL;
+
+	Node* paramnode = createPARAMS(createPARAM("fParam",varshash),NULL);
+
+	printf ( "******************1.param test*****************\n" );
+	ExPARAMS(paramnode,paramlist);
+	printf ( "calculate done\n" );
+	Data *p = getItem(varshash, "fParam");
+	printf("expected 222    / actual result %d\n",p->value.intValue);
+
+	printf ( "******************2.definiton test*****************\n" );
+	// test the function below
+	//funtest(fParam){ fParam = fParam + 1;}
+	//
+	Node* i1 = createVar("fParam");
+	Node* i2 = createVar("fParam");
+	Node* i3 = createInt(1);
+	Node* add = createComplex(ADD, i1, i3, varshash);
+	Node* stmt = createComplex(ASSIGN, i2, add, varshash); 
+	Node* fundef = createFUN(paramnode,stmt, varshash);	
+	printf("expected %p    / actual result %p\n",paramnode, fundef->left);
+	printf("expected %p    / actual result %p\n",stmt, fundef->right);
+	//register fundef to hash 
+	setItem(funhash, "funtest", fundef);
+
+	printf ( "******************3.call test*****************\n" );
+	// create fun call node;
+	Node* call = createFUNCALL(funhash,"funtest",paramlist,varshash);
+	Ex(call);
+	p = getItem(varshash, "fParam");
+	printf("expected 223    / actual result %d\n",p->value.intValue);
+	
+
+    freeHash(varshash);
+	freeHash(funhash);
+	freeNode(paramnode);
+	freeNode(call);
+	printf ( "===========================================\n" );
+
+}
+
 void iftest(){
 	printf ( "==================if test=================\n" );
 	Hash myhash = initHash(65536);
@@ -184,6 +235,7 @@ main ( int argc, char *argv[] )
 	hashtest();
 	dataunittest();
 	iftest();
+	funtest();
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

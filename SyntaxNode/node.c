@@ -20,6 +20,7 @@
 #include "node.h"
 #include <stdio.h>
 
+
 Node * createEmptyNode(){
 	Node* ret = (Node*)malloc(sizeof(Node));
 	ret->op = NONE;
@@ -81,7 +82,29 @@ Data ExCompare(int comp, Node* node){
 		return  ret.value.intValue<0?TRUE : FALSE;
 	}
 }
-
+Data ExPARAMS(Node* node, ArrayUnit* actualParams){
+	//actual params should be array
+	Data *dup = (Data*)malloc(sizeof(Data));
+	memcpy(dup, actualParams->data, sizeof(Data));
+	setItem(node->localvars,node->data->value.strValue,dup);
+	actualParams = actualParams->next;
+	if(node->right != NULL){
+		ExPARAMS(node->right, actualParams);
+	}
+}
+Data ExSTMT(Node* node){
+	Ex(node->left);
+	Ex(node->right);
+}
+Data ExFUNCALL(Node* node){
+	//set param
+	Data params = ExGET(node->left);
+	ExPARAMS(node->right->left, params.value.arrayValue);
+	return ExSTMT(node->right);
+}
+Data ExFUN(Node* node){
+	return ExSTMT(node->right);
+}
 void freeNode(Node* node){
 	if(node!=NULL){
 		freeNode(node->left);
@@ -113,6 +136,12 @@ Node* createInt(int value){
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createIntData(value);
+	return ret;
+}
+Node* createArray(ArrayUnit *arr){
+	Node* ret = createEmptyNode();
+	ret->op =  GET;
+	ret->data = createArrayData(arr);
 	return ret;
 }
 Node* createNOT(Node* expr, Hash localvars){
@@ -147,9 +176,23 @@ Node* createComplex(int op, Node* left, Node* right, Hash localvars){
 	ret->localvars = localvars;
 	return ret;
 }
+
+Node* createPARAM(char* name, Hash localvars){
+	Node* ret = createEmptyNode();
+	ret->op =  PARAMS;
+	ret->localvars = localvars;
+	ret->data = createStrData(name);
+	return ret;
+}
+
+Node* createPARAMS(Node* param, Node* params){
+	param->right = params;
+	return param;
+}
+
 Node* createSTMTS(Node* stmt, Node* stmts, Hash localvars){
 	Node* ret = createEmptyNode();
-	ret->op =  EXE;
+	ret->op =  STMT;
 	ret->left = stmt;
 	ret->right = stmts;
 	ret->localvars = localvars;
@@ -167,6 +210,24 @@ Node* createWHILE(Node* judge, Node* body, Hash localvars){
 Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash localvars){
 	Node* whilestmt = createWHILE(judge, createSTMTS(body,step,localvars),localvars);
 	return createSTMTS(initial, whilestmt,localvars);
+}
+
+Node* createFUN(Node* paramslist, Node* stmts, Hash localvars){
+	Node* ret = createEmptyNode();
+	ret->op = FUN;
+	ret->localvars = localvars;
+	ret->left = paramslist;
+	ret->right = stmts;
+	return ret;
+}
+Node* createFUNCALL(Hash funHash, char* name, ArrayUnit* paramslist, Hash localvars){
+	Node* ret = createEmptyNode();
+	ret->op = FUNCALL;
+	ret->left = createArray(paramslist);
+	Node* fun = (Node*)getItem(funHash, name);
+	ret->right = fun;
+	ret->localvars = localvars;
+	return ret;
 }
 
 Data Ex(Node* node){
@@ -187,6 +248,10 @@ Data Ex(Node* node){
 			return ExIF(node);
 		case ST:
 			return ExCompare(ST,node);
+		case FUNCALL:
+			return ExFUNCALL(node);
+		case STMT:
+			return ExSTMT(node);
 		default:
 			break;   
 	}
