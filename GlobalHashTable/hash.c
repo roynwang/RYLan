@@ -42,7 +42,7 @@ Hash initHash(size_t size){
 void freeHash(Hash hash){
 	if(hash == NULL) return;
 	//need to free all items
-
+	printf ( "free HASH %p\n", hash );
 	if(hash->table != NULL){
 		unsigned int tmp = hash->size;
 		while(tmp>0){
@@ -57,6 +57,9 @@ void freeHash(Hash hash){
 }
 
 void setItem(Hash hash, const char* name, void* value){
+	void* v = hash->table[getBKDRHash(name,hash->size)];
+	if(v !=NULL)
+		free(v);
 	hash->table[getBKDRHash(name,hash->size)] = value;
 }
 

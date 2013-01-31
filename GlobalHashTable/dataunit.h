@@ -32,10 +32,11 @@ typedef struct _ArrayUnit{
 typedef enum { IntType, StrType, VarType, True, False, Empty, ArrayType} TypeEnum;
 typedef struct _Data{
 	int valueType;
+	char isOnHeap;
 	union {
-		const char* strValue;
+		char* strValue;
 		int intValue;
-		const char* varValue;
+		char* varValue;
 		ArrayUnit* arrayValue;
 	}value;
 }Data;
@@ -56,4 +57,6 @@ Data comparedata(Hash hash, Data* left, Data* right);
 Data* createEmptyData();
 char* toString(Data* data);
 int isTrue(Data* data);
+void freeData(Data* data);
+
 #endif   /* ----- #ifndef DATAUNIT_INC  ----- */

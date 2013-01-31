@@ -20,6 +20,8 @@
 #include "../GlobalHashTable/hash.h"
 #include "../GlobalHashTable/dataunit.h"
 #include "../SyntaxNode/node.h"
+#include <mcheck.h>
+
 
 void funtest(){
 
@@ -33,7 +35,7 @@ void funtest(){
 	paramlist->data = getItem(varshash, "int1");
 	paramlist->next = NULL;
 
-	Node* paramnode = createPARAMS(createPARAM("fParam",varshash),NULL);
+	Node* paramnode = createPARAMS(createPARAM("fParam",&varshash),NULL);
 
 	printf ( "******************1.param test*****************\n" );
 	ExPARAMS(paramnode,paramlist);
@@ -48,9 +50,9 @@ void funtest(){
 	Node* i1 = createVar("fParam");
 	Node* i2 = createVar("fParam");
 	Node* i3 = createInt(1);
-	Node* add = createComplex(ADD, i1, i3, varshash);
-	Node* stmt = createComplex(ASSIGN, i2, add, varshash); 
-	Node* fundef = createFUN(paramnode,stmt, varshash);	
+	Node* add = createComplex(ADD, i1, i3, &varshash);
+	Node* stmt = createComplex(ASSIGN, i2, add, &varshash); 
+	Node* fundef = createFUN(paramnode,stmt, &varshash);	
 	printf("expected %p    / actual result %p\n",paramnode, fundef->left);
 	printf("expected %p    / actual result %p\n",stmt, fundef->right);
 	//register fundef to hash 
@@ -58,18 +60,17 @@ void funtest(){
 
 	printf ( "******************3.call test*****************\n" );
 	// create fun call node;
-	Node* call = createFUNCALL(funhash,"funtest",paramlist,varshash);
+	Node* call = createFUNCALL(&funhash,"funtest",paramlist,&varshash);
 	Ex(call);
 	p = getItem(varshash, "fParam");
 	printf("expected 223    / actual result %d\n",p->value.intValue);
 	
 
-    freeHash(varshash);
-	freeHash(funhash);
+	printf ( "===========================================\n" );
+//    freeHash(varshash);
+//	freeHash(funhash);
 	freeNode(paramnode);
 	freeNode(call);
-	printf ( "===========================================\n" );
-
 }
 
 void iftest(){
@@ -88,10 +89,10 @@ void iftest(){
 	Node* i5 = createVar("cde");
 	printf ( "%p %p %p %p %p\n", i1,i2,i3,i4,i5 );
 
-	Node* add = createComplex(ADD, i4, i5, myhash);
-	Node* stmt = createComplex(ASSIGN, i3, add, myhash); 
-	Node* expr = createComplex(ST, i1, i2, myhash);
-	Node* head = createIF(expr,stmt, myhash);
+	Node* add = createComplex(ADD, i4, i5, &myhash);
+	Node* stmt = createComplex(ASSIGN, i3, add, &myhash); 
+	Node* expr = createComplex(ST, i1, i2, &myhash);
+	Node* head = createIF(expr,stmt, &myhash);
 
 	printf ( "%p %p %p %p \n", expr,add,stmt,head);
 	Ex(head);
@@ -105,7 +106,7 @@ void iftest(){
 	result = *(Data*)getItem(myhash,"abc");
 	printf("expected 777    / actual result %d\n",result.value.intValue);
 
-	freeHash(myhash);
+//	freeHash(myhash);
 	freeNode(head);
 
 	printf ( "==========================================\n" );
@@ -150,6 +151,11 @@ void dataunittest(){
 	printf("expected 12test / actual result %s\n",result1.value.strValue);
 	printf("expected 555    / actual result %d\n",result2.value.intValue);
 	freeHash(myhash);
+	freeData(d1);
+	freeData(d2);
+	freeData(d3);
+	freeData(d4);
+	free(result1.value.strValue);
 	printf ( "============================================\n" );
 }
 void nodetest(){
@@ -177,7 +183,7 @@ void nodetest(){
 
 	Node* head = (Node*)malloc(sizeof(Node));
 	head->op = ADD;
-	head->localvars = myhash;
+	head->ptrlocalvars = &myhash;
 	head->data = NULL;
 
 	Node* left = (Node*)malloc(sizeof(Node));
@@ -187,10 +193,10 @@ void nodetest(){
 
 	left->op = GET;
 	left->data = d3;
-	left->localvars = myhash;
+	left->ptrlocalvars = &myhash;
 	right->op = GET;
 	right->data = d4;
-	right->localvars = myhash;
+	right->ptrlocalvars = &myhash;
 
 	Data result3 = Ex(head);
 	printf("expected 555    / actual result %d\n",result3.value.intValue);
@@ -200,7 +206,7 @@ void nodetest(){
 	nested->op = ASSIGN;
 	nested->left  = left; 
 	nested->right = head;
-	nested->localvars = myhash;
+	nested->ptrlocalvars = &myhash;
 	Ex(nested);
 	result3 = *(Data*)getItem(myhash,"int1");
 	printf("expected 555    / actual result %d\n",result3.value.intValue);
@@ -209,16 +215,13 @@ void nodetest(){
 	printf("expected 888    / actual result %d\n",result3.value.intValue);
 
 
-
-
 	left->data = d1;
 	right->data = d2;
 
 	result3 = Ex(head);
 	printf("expected 12test / actual result %s\n",result3.value.strValue);
-
 	printf ( "============================================\n" );
-	freeHash(myhash);
+//	freeHash(myhash);
 	freeNode(head);
 
 }
@@ -232,10 +235,11 @@ void nodetest(){
 	int
 main ( int argc, char *argv[] )
 {
+	mtrace();
 	hashtest();
 	dataunittest();
 	iftest();
 	funtest();
-
+//    nodetest();
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

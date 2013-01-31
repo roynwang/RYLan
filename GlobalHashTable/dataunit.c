@@ -54,6 +54,7 @@ Data adddata(Hash hash, Data* left, Data* right){
 		ret.valueType = StrType;
 		char* str = (char*)malloc(sizeof(char)*(strlen(left->value.strValue)+strlen(right->value.strValue)+1));
 		ret.value.strValue = strcat(strcat(str, left->value.strValue),right->value.strValue);
+		ret.isOnHeap = 1;
 	}
 	return ret;
 }
@@ -112,6 +113,7 @@ Data comparedata(Hash hash, Data* left, Data* right){
 Data* createEmptyData(){
 	Data* ret = (Data*)malloc(sizeof(Data));
 	ret->valueType = Empty;
+	ret->isOnHeap = 0;
 	return ret;
 }
 char* toString(Data* data){
@@ -138,12 +140,37 @@ Data* createIntData(int value){
 Data* createArrayData(ArrayUnit *arr){
 	Data* ret = createEmptyData();
 	ret->valueType = ArrayType;
+	ret->isOnHeap = 1;
 	ret->value.arrayValue = arr;
-	
 }
 
 int isTrue(Data* data){
 	return data->valueType == True? 1:0;
 }
+
+void freeArray(ArrayUnit* arr){
+	while(arr!= NULL){
+		freeData((Data*) arr->data);
+		ArrayUnit* tmp = arr->next;
+		free(arr);
+		arr = tmp;
+	}
+}
+void freeData(Data* data){
+	switch(data->valueType){
+		case StrType:
+			if(data->isOnHeap == 1)
+				free(data->value.strValue);
+			break;
+		case ArrayType:
+			printf ( "free arrary %p\n", data->value.arrayValue );
+			freeArray(data->value.arrayValue);
+			break;
+		default:
+			break;
+	}
+	free(data);
+}
+
 
 

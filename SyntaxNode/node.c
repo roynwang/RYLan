@@ -26,7 +26,8 @@ Node * createEmptyNode(){
 	ret->op = NONE;
 	ret->left = NULL;
 	ret->right = NULL;
-	ret->localvars = NULL;
+	ret->ptrlocalvars = NULL;
+	ret->ptrfuncs = NULL;
 	ret->data = NULL;
 	return ret;
 }
@@ -42,29 +43,29 @@ Data ExASSIGN(Node* node){
 	Data* dest = (Data*)malloc(sizeof(Data));
 	memcpy(dest, &src, sizeof(src));
 	printf ( "ASSIGN: Name = %s value = %d\n", name, dest->value.intValue );
-	setItem(node->localvars, name, (void*)dest);
+	setItem(*(node->ptrlocalvars), name, (void*)dest);
 	return TRUE;
 }
 Data ExADD(Node* node){
 	printf ( "Executing ADD ... ...\n" );
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return adddata(node->localvars, &l, &r);
+	return adddata(*(node->ptrlocalvars), &l, &r);
 }
 Data ExSUB(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return subdata(node->localvars,&l,&r);
+	return subdata(*(node->ptrlocalvars),&l,&r);
 }
 Data ExMUL(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return muldata(node->localvars,&l,&r);
+	return muldata(*(node->ptrlocalvars),&l,&r);
 }
 Data ExDIV(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return divdata(node->localvars,&l,&r);
+	return divdata(*(node->ptrlocalvars),&l,&r);
 }
 Data ExIF(Node* node){
 	Data l = Ex(node->left);
@@ -78,7 +79,7 @@ Data ExCompare(int comp, Node* node){
 	if(comp == ST){
 		Data l = Ex(node->left);
 		Data r = Ex(node->right);
-		Data ret = comparedata(node->localvars,&l,&r);
+		Data ret = comparedata(*(node->ptrlocalvars),&l,&r);
 		return  ret.value.intValue<0?TRUE : FALSE;
 	}
 }
@@ -86,7 +87,7 @@ Data ExPARAMS(Node* node, ArrayUnit* actualParams){
 	//actual params should be array
 	Data *dup = (Data*)malloc(sizeof(Data));
 	memcpy(dup, actualParams->data, sizeof(Data));
-	setItem(node->localvars,node->data->value.strValue,dup);
+	setItem(*(node->ptrlocalvars),node->data->value.strValue,dup);
 	actualParams = actualParams->next;
 	if(node->right != NULL){
 		ExPARAMS(node->right, actualParams);
@@ -107,14 +108,15 @@ Data ExFUN(Node* node){
 }
 void freeNode(Node* node){
 	if(node!=NULL){
+		printf ( "free NODE: %p\n", node);
 		freeNode(node->left);
 		freeNode(node->right);
-//		printf ( "free localvars %p ... \n",node->localvars );
-//		if(node->localvars!=NULL)
-//			freeHash(node->localvars);
-//		printf ( "done",node->localvars );
+		if(node->ptrlocalvars!=NULL){
+			freeHash(*(node->ptrlocalvars));
+			*(node->ptrlocalvars) = NULL;
+		}
 		if(node->data!=NULL){
-			free(node->data);
+			freeData(node->data);
 		}
 		free(node);
 	}
@@ -144,43 +146,43 @@ Node* createArray(ArrayUnit *arr){
 	ret->data = createArrayData(arr);
 	return ret;
 }
-Node* createNOT(Node* expr, Hash localvars){
+Node* createNOT(Node* expr, Hash * ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  NOT;
 	ret->left = expr;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	return ret;
 }
-Node* createIF(Node* expr, Node* thenstmt, Hash localvars){
+Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  IF;
 	ret->left = expr;
 	ret->right = thenstmt;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	return ret;
 }
 
-Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash localvars){
+Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  IF;
-	ret->left = createNOT(createIF(expr, thenstmt,localvars), localvars);
+	ret->left = createNOT(createIF(expr, thenstmt,ptrlocalvars), ptrlocalvars);
 	ret->right = elsestmt;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	return ret;
 }
-Node* createComplex(int op, Node* left, Node* right, Hash localvars){
+Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  op;
 	ret->left = left;
 	ret->right = right;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	return ret;
 }
 
-Node* createPARAM(char* name, Hash localvars){
+Node* createPARAM(char* name, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  PARAMS;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	ret->data = createStrData(name);
 	return ret;
 }
@@ -190,43 +192,44 @@ Node* createPARAMS(Node* param, Node* params){
 	return param;
 }
 
-Node* createSTMTS(Node* stmt, Node* stmts, Hash localvars){
+Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  STMT;
 	ret->left = stmt;
 	ret->right = stmts;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	return ret;
 }
 
-Node* createWHILE(Node* judge, Node* body, Hash localvars){
-	Node* stmts = createSTMTS(body, NULL,localvars);
-	Node* ret= createIF(judge, stmts, localvars);
-	ret->localvars = localvars;
+Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars){
+	Node* stmts = createSTMTS(body, NULL,ptrlocalvars);
+	Node* ret= createIF(judge, stmts, ptrlocalvars);
+	ret->ptrlocalvars = ptrlocalvars;
 	stmts->right = ret;
 	return ret;
 }
 
-Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash localvars){
-	Node* whilestmt = createWHILE(judge, createSTMTS(body,step,localvars),localvars);
-	return createSTMTS(initial, whilestmt,localvars);
+Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrlocalvars){
+	Node* whilestmt = createWHILE(judge, createSTMTS(body,step,ptrlocalvars),ptrlocalvars);
+	return createSTMTS(initial, whilestmt,ptrlocalvars);
 }
 
-Node* createFUN(Node* paramslist, Node* stmts, Hash localvars){
+Node* createFUN(Node* paramslist, Node* stmts, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op = FUN;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
 	ret->left = paramslist;
 	ret->right = stmts;
 	return ret;
 }
-Node* createFUNCALL(Hash funHash, char* name, ArrayUnit* paramslist, Hash localvars){
+Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op = FUNCALL;
 	ret->left = createArray(paramslist);
-	Node* fun = (Node*)getItem(funHash, name);
+	Node* fun = (Node*)getItem(*funHash, name);
 	ret->right = fun;
-	ret->localvars = localvars;
+	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrfuncs = funHash;
 	return ret;
 }
 

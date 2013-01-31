@@ -38,7 +38,8 @@ typedef struct _Node{
 	struct _Node* left;
 	struct _Node* right;
 	Data* data;
-	Hash localvars;
+	Hash* ptrlocalvars;
+	Hash* ptrfuncs;
 }Node;
 
 Data Ex(Node* node);
@@ -48,13 +49,13 @@ Node* createStr(char* value);
 Node* createInt(int value);
 Node* createArray(ArrayUnit *arr);
 
-Node* createComplex(int op , Node* left, Node* right, Hash localvars);
-Node* createIF(Node* expr, Node* thenstmt, Hash localvars);
-Node* createFUN(Node* paramslist, Node* stmts, Hash localvars);
-Node* createSTMTS(Node* stmt, Node* stmts, Hash localvars);
+Node* createComplex(int op , Node* left, Node* right, Hash *ptrlocalvars);
+Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars);
+Node* createFUN(Node* paramslist, Node* stmts, Hash *ptrlocalvars);
+Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars);
 Node* createPARAMS(Node* param, Node* params);
-Node* createPARAM(char* name, Hash localvars);
-Node* createFUNCALL(Hash funHash, char* name, ArrayUnit* paramslist, Hash localvars);
+Node* createPARAM(char* name, Hash *ptrlocalvars);
+Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash *ptrlocalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 
