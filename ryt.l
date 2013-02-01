@@ -1,5 +1,5 @@
 %{
-#include "y.tab.c"  
+#include "y.tab.c"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,27 +12,32 @@ letter      [A-Za-z]
 digit       [0-9]
 assign      =
 id          {letter}({letter}|{digit})*
-strvalue    \"({letter}|{digit})*\"
+strvalue    \"({letter}|{digit})*\
 end         ;
 number      {digit}+
 fun         fun
 
+
 %%
 {ws}              {}
-"run"             { debugmsg("RUN"); return RUN;}
-"fun"             { debugmsg("FUN"); return FUN;}
-{id}              { yylval.str = strdup(yytext); debugmsg(yytext); return symbol; }
-{assign}          { return ASSIGN; }
+"run"             { debugmsg("RUN");}
+"fun"             { debugmsg("FUN");return FUNDEF;}
+{id}              { yylval.str =strdup(yytext);debugmsg(yytext);return symbol;}
+{assign}          { return TOKENASSIGN;}
 {end}             { return SEMC;}
-{number}          { yylval.value = atoi(yytext); debugmsg(yytext); return expr;}
-"{"               { return BLOCKSTART;}
-"}"               { return BLOCKEND;}
+{number}          { yylval.value = atoi(yytext); debugmsg(yytext); return expr; }
+"{"               { debugmsg("BLOCKSTART"); return BLOCKSTART;}
+"}"               { debugmsg("BLOCKEND");return BLOCKEND;}
+"("               { debugmsg("LP");return LP;}
+")"               { debugmsg("RP");return RP;}
+","               { return COMMA;}
+
 %%
 int yywrap()
 {
 		return 1;
 }
 void debugmsg(char* msg){
-	if(DEBUG & LEXDEBUG)
 		printf("[LEX] %s\n", msg);
 }
+

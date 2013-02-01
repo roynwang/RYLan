@@ -102,6 +102,7 @@ Data ExSTMT(Node* node){
 }
 Data ExFUNCALL(Node* node){
 	//set param
+	//create new local vars
 	Data params = ExGET(node->left);
 	ExPARAMS(node->right->left, params.value.arrayValue);
 	return Ex(node->right);
@@ -115,7 +116,6 @@ void freeNode(Node* node){
 		freeNode(node->left);
 		freeNode(node->right);
 		if(node->ptrlocalvars!=NULL){
-
 			printf ( "!!!!&hash %p !!!!!!!!!!!\n",  node->ptrlocalvars);
 			if(*(node->ptrlocalvars) != NULL)
 			{
@@ -163,6 +163,7 @@ Node* createPtr(void* value){
 	ret->data = createPtrData(value);
 	return ret;
 }
+
 Node* createNOT(Node* expr, Hash * ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  NOT;
@@ -188,6 +189,8 @@ Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrlocalvar
 	return ret;
 }
 Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
+
+	printf ( "creating expr: %d \n",op );
 	Node* ret = createEmptyNode();
 	ret->op =  op;
 	ret->left = left;
@@ -201,6 +204,7 @@ Node* createPARAM(char* name, Hash* ptrlocalvars){
 	ret->op =  PARAMS;
 	ret->ptrlocalvars = ptrlocalvars;
 	ret->data = createStrData(name);
+	printf ( "creating param: %p %s\n", ret, name );
 	return ret;
 }
 
@@ -215,6 +219,7 @@ Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars){
 	ret->left = stmt;
 	ret->right = stmts;
 	ret->ptrlocalvars = ptrlocalvars;
+	printf("create STMTS %p\n", ret);
 	return ret;
 }
 
@@ -231,12 +236,24 @@ Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrloc
 	return createSTMTS(initial, whilestmt,ptrlocalvars);
 }
 
-Node* createFUN(Node* paramslist, Node* stmts, Hash *ptrlocalvars){
+Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash){
+	printf ( "param = %p stmts = %p varstable = %p\n",paramslist, stmts, ptrlocalvars );
+	printf("creating FUN \n");
 	Node* ret = createEmptyNode();
+	printf ( "assing op ... " );
 	ret->op = FUN;
+	printf ( "done\n assign ptrlocalvars ..." );
 	ret->ptrlocalvars = ptrlocalvars;
+	printf ( "done\n assign param %p... ", paramslist );
 	ret->left = paramslist;
+	printf ( "done\n assign stmts ..." );
 	ret->right = stmts;
+	printf ( "done\n" );
+	ret->ptrfuncs = ptrfunhash;
+	//register the function
+
+	Data* ptrfun = createPtrData(ret);
+	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;
 }
 Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash* ptrlocalvars){

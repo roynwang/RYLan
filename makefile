@@ -7,8 +7,8 @@ SYNTAX = SyntaxNode
 TEST = Test
 DEBUG =  -g
 
-prog: lex.yy.c utility.o
-	$(CC) lex.yy.c utility.o -o $(PARSER) $(DEBUG)
+prog: lex.yy.c node.o hash.o dataunit.o
+	$(CC) lex.yy.c node.o hash.o dataunit.o -o $(PARSER) $(DEBUG)
 
 lex.yy.c: ryt.l y.tab.c
 	$(LEX) ryt.l

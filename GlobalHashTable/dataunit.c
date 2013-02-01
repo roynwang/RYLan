@@ -27,13 +27,13 @@ Data falseData = {valueType: False};
 char* catnewstr(const char* a, const char* b){
 	int lena = strlen(a);
 	int lenb = strlen(b);
-	char* ret = (char*)malloc(lena+b+1);
+	char* ret = (char*)malloc(sizeof(lena+lenb+1));
 	char* start = ret;
 	memcpy(ret, a, lena);
 	ret+=lena;
 	memcpy(ret, b, lenb);
 	ret+=lenb;
-	ret='\0';
+	*ret='\0';
 	return start;
 }
 
@@ -194,5 +194,4 @@ void freeData(Data* data){
 	}
 	free(data);
 }
-
 

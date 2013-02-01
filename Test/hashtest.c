@@ -54,13 +54,13 @@ void funtest(){
 	Node* i3 = createInt(1);
 	Node* add = createComplex(ADD, i1, i3, &varshash);
 	Node* stmt = createComplex(ASSIGN, i2, add, &varshash); 
-	Node* fundef = createFUN(paramnode,stmt, &varshash);	
+	Node* fundef = createFUN("funtest",paramnode,stmt, &varshash,&funhash);	
 	printf("expected %p    / actual result %p\n",paramnode, fundef->left);
 	printf("expected %p    / actual result %p\n",stmt, fundef->right);
 
 	//register fundef to hash 
-	Data* ptrfun = createPtrData(fundef);
-	setItem(funhash, "funtest", ptrfun);
+//	Data* ptrfun = createPtrData(fundef);
+//	setItem(funhash, "funtest", ptrfun);
 
 	printf ( "******************3.call test*****************\n" );
 
@@ -229,7 +229,6 @@ void nodetest(){
 	printf ( "============================================\n" );
 //	freeHash(myhash);
 	freeNode(head);
-
 }
 
 /* 

@@ -2,70 +2,75 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utility.h"
-Node* fun;
-
-Node* installSymbolAssign(char* id, int exp);
-Node* installFun(char* id, Node* body);
-void  execute();
+#include "SyntaxNode/node.h"
 void  yyerror(char*s);
-
 void* cur = NULL;
-char* curFun;
+char* curFun = NULL;
+Hash* varshash = NULL;
+Hash* funshash = NULL;
+Node* funnode = NULL;
 
 %}
 %union {
 	char* str;
 	int value;
-	Node *node; /* 结点地址 */
+	Node *node;
 }
-%token  ASSIGN  SEMC FUN BLOCKSTART BLOCKEND RUN
+%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA
 %token <str>  symbol
 %token <value> expr
-%type  <node> stmtlist stmt
+%type  <node> stmt stmts param params fundef
 %%
-prog           :   fundefs RUN SEMC                                       { execute();}
+prog           :  fundef                                                  {printf("xxxxxx");
+ funnode = $1;
+}
                ;
 
-fundefs        :   fundefs fundef
-               |   fundef 
+fundef         :  FUNDEF symbol LP params RP BLOCKSTART stmts BLOCKEND    {$$ = createFUN($2,$4,$7,varshash,funshash);}
+               ;
+params         :  param  COMMA params                                     {$$ = createPARAMS($1,$3);}
+			   |  param                                                   {$$ = $1;}
+               ;
+param          :  symbol                                                  {$$ = createPARAM($1,varshash);}
+               ;
+stmts          :  stmts stmt                                              {$$ = createSTMTS($2,$1,varshash);}
+               |  stmt                                                    {$$ = createSTMTS($1,NULL,varshash);}
 			   ;
-
-fundef         :   FUN symbol BLOCKSTART stmtlist BLOCKEND                {printf("fundef: %s \n", $2);
-                                                                           installFun($2, $4);
-                                                                          }
+stmt           :  symbol TOKENASSIGN expr SEMC                            {$$ = createComplex(ASSIGN,createVar($1),createInt($3),varshash);}
                ;
-stmtlist       :   stmtlist stmt                                          {printf("!!!!!!!statement\n");}
 
-               |   stmt                                                   {}
-               ;
-stmt           :   symbol ASSIGN expr SEMC                                {printf("add stmt: ASSIGN %s \n", $1);
-                                                                           $$ = installSymbolAssign($1,$3);
-			   }
-			   ;
 %%
 
-Node* installSymbolAssign(char* id, int exp){
-	printf("install symbol assign --- %s %d\n", id, exp);
-	Node* ret = (Node*)malloc(sizeof(Node));
-	ret->varName = id;
-	ret->op = AssignOp;
-	ret->intValue = exp;
-	return ret;
-}
-Node* installFun(char* id, Node* body){
-	printf("install function  %s: %p\n", id, body);
-	fun = body;
-}
+
 void execute(){
-	printf("Executing function %p \n", fun);
-	ex(fun);
+	printf("Executing function \n");
 }
-int main(){
+int main(){	
+	mtrace();
+	varshash = (Hash*)malloc(sizeof(Hash*));
+	funshash = (Hash*)malloc(sizeof(Hash*));
+	*varshash = initHash(65536);
+	*funshash  = initHash(65536);
+	printf("global vars = %p funcs = %p\n", varshash, funshash);
+    printf("YACC started\n");
 	yyparse();
+	freeNode(funnode);
+	freeHash(*varshash);
+	freeHash(*funshash);
+	free(varshash);
+	free(funshash);
+	yy_delete_buffer(YY_CURRENT_BUFFER);
+	yy_init = 1;
 	return 0;
 }
 void yyerror(char *s) { 
-	    fprintf(stdout, "%s\n", s); 
+	printf("xxxxxxxxxxxxxxxxxxx\n");
+	fprintf(stdout, "%s\n", s); 
+	freeNode(funnode);
+	freeHash(*varshash);
+	freeHash(*funshash);
+	free(varshash);
+	free(funshash);
+
 }
 

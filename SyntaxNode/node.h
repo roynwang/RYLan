@@ -51,7 +51,7 @@ Node* createArray(ArrayUnit *arr);
 
 Node* createComplex(int op , Node* left, Node* right, Hash *ptrlocalvars);
 Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars);
-Node* createFUN(Node* paramslist, Node* stmts, Hash *ptrlocalvars);
+Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash);
 Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars);
 Node* createPARAMS(Node* param, Node* params);
 Node* createPARAM(char* name, Hash *ptrlocalvars);
