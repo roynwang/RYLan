@@ -26,13 +26,15 @@
 void funtest(){
 
 	printf ( "==================fun test=================\n" );
-	Hash varshash = initHash(65536);
-	Hash funhash = initHash(65536);
+	int hashsize = 65536;
+	Hash varshash = initHash(hashsize);
+	Hash funhash = initHash(hashsize);
 	setItem(varshash, "int1",createIntData(222));
 	setItem(varshash, "int2",createIntData(333));
 
 	ArrayUnit * paramlist = (ArrayUnit*)malloc(sizeof(ArrayUnit));
-	paramlist->data = getItem(varshash, "int1");
+	paramlist->data = createPtrData(getItem(varshash, "int1"));
+
 	paramlist->next = NULL;
 
 	Node* paramnode = createPARAMS(createPARAM("fParam",&varshash),NULL);
@@ -55,10 +57,14 @@ void funtest(){
 	Node* fundef = createFUN(paramnode,stmt, &varshash);	
 	printf("expected %p    / actual result %p\n",paramnode, fundef->left);
 	printf("expected %p    / actual result %p\n",stmt, fundef->right);
+
 	//register fundef to hash 
-	setItem(funhash, "funtest", fundef);
+	Data* ptrfun = createPtrData(fundef);
+	setItem(funhash, "funtest", ptrfun);
 
 	printf ( "******************3.call test*****************\n" );
+
+	printf ( "fun = %p \n", fundef );
 	// create fun call node;
 	Node* call = createFUNCALL(&funhash,"funtest",paramlist,&varshash);
 	Ex(call);
@@ -67,9 +73,10 @@ void funtest(){
 	
 
 	printf ( "===========================================\n" );
+//	printf ( "%p %p %p %p %p %p %p %p\n",i1,i2,i3,add,stmt,fundef,call );
 //    freeHash(varshash);
-//	freeHash(funhash);
-	freeNode(paramnode);
+	printf ( "funhash = %p varshash = %p\n", funhash, varshash );
+	freeHash(funhash);
 	freeNode(call);
 }
 
@@ -214,7 +221,6 @@ void nodetest(){
 	result3 = *(Data*)getItem(myhash,"int1");
 	printf("expected 888    / actual result %d\n",result3.value.intValue);
 
-
 	left->data = d1;
 	right->data = d2;
 
@@ -236,10 +242,10 @@ void nodetest(){
 main ( int argc, char *argv[] )
 {
 	mtrace();
+	funtest();
 	hashtest();
 	dataunittest();
 	iftest();
-	funtest();
 //    nodetest();
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

@@ -29,7 +29,7 @@ typedef struct _ArrayUnit{
 	struct _ArrayUnit * next;	
 } ArrayUnit;
 
-typedef enum { IntType, StrType, VarType, True, False, Empty, ArrayType} TypeEnum;
+typedef enum { IntType, StrType, VarType, PtrType, True, False, Empty, ArrayType} TypeEnum;
 typedef struct _Data{
 	int valueType;
 	char isOnHeap;
@@ -38,6 +38,7 @@ typedef struct _Data{
 		int intValue;
 		char* varValue;
 		ArrayUnit* arrayValue;
+		void* ptrValue;
 	}value;
 }Data;
 
@@ -48,6 +49,7 @@ Data* createIntData(int value);
 Data* createStrData(char* value);
 Data* createVarData(char* name);
 Data* createArrayData(ArrayUnit* arr);
+Data* createPtrData(void* value);
 
 Data adddata(Hash hash, Data* left, Data* right);
 Data subdata(Hash hash, Data* left, Data* right);

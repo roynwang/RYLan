@@ -19,9 +19,23 @@
 #include <string.h>
 #include "dataunit.h"
 #include <stdio.h>
+#include <memory.h>
 
 Data trueData = {valueType: True};
 Data falseData = {valueType: False};
+
+char* catnewstr(const char* a, const char* b){
+	int lena = strlen(a);
+	int lenb = strlen(b);
+	char* ret = (char*)malloc(lena+b+1);
+	char* start = ret;
+	memcpy(ret, a, lena);
+	ret+=lena;
+	memcpy(ret, b, lenb);
+	ret+=lenb;
+	ret='\0';
+	return start;
+}
 
 
 void typecheck(Data* left, Data* right){
@@ -51,9 +65,11 @@ Data adddata(Hash hash, Data* left, Data* right){
 		ret.value.intValue = left->value.intValue + right->value.intValue;
 	}
 	if(left->valueType == StrType){
+
+		printf ( "left= %s right = %s\n",left->value.strValue, right->value.strValue );
 		ret.valueType = StrType;
-		char* str = (char*)malloc(sizeof(char)*(strlen(left->value.strValue)+strlen(right->value.strValue)+1));
-		ret.value.strValue = strcat(strcat(str, left->value.strValue),right->value.strValue);
+		ret.value.strValue = catnewstr(left->value.strValue,right->value.strValue);
+		printf ( "result = %s\n", ret.value.strValue );
 		ret.isOnHeap = 1;
 	}
 	return ret;
@@ -143,6 +159,12 @@ Data* createArrayData(ArrayUnit *arr){
 	ret->isOnHeap = 1;
 	ret->value.arrayValue = arr;
 }
+Data* createPtrData(void* value){
+	Data* ret = createEmptyData();
+	ret->valueType = PtrType;
+	ret->isOnHeap = 1;
+	ret->value.ptrValue = value;
+}
 
 int isTrue(Data* data){
 	return data->valueType == True? 1:0;
@@ -157,6 +179,7 @@ void freeArray(ArrayUnit* arr){
 	}
 }
 void freeData(Data* data){
+	printf ( "free data %p type: %d\n",data, data->valueType );
 	switch(data->valueType){
 		case StrType:
 			if(data->isOnHeap == 1)
@@ -171,6 +194,5 @@ void freeData(Data* data){
 	}
 	free(data);
 }
-
 
 

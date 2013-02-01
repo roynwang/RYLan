@@ -38,17 +38,17 @@ Hash initHash(size_t size){
 		ret->table[--tmp] = NULL;
 	}
 	return ret;
+	printf ( "created Hash %p\n", ret );
 }
 void freeHash(Hash hash){
 	if(hash == NULL) return;
 	//need to free all items
-	printf ( "free HASH %p\n", hash );
 	if(hash->table != NULL){
 		unsigned int tmp = hash->size;
 		while(tmp>0){
 			tmp --;
 			if(hash->table[tmp]!=NULL)
-				free(hash->table[tmp]);
+				freeData(hash->table[tmp]);
 		}
 		free(hash->table);
 		hash->table = NULL;

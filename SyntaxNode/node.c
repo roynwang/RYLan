@@ -40,7 +40,7 @@ Data ExASSIGN(Node* node){
 	printf ( "Executing ASSIGN ... ...\n" );
 	const char* name = Ex(node->left).value.varValue;
 	Data src = Ex(node->right);
-	Data* dest = (Data*)malloc(sizeof(Data));
+	Data* dest = createEmptyData();
 	memcpy(dest, &src, sizeof(src));
 	printf ( "ASSIGN: Name = %s value = %d\n", name, dest->value.intValue );
 	setItem(*(node->ptrlocalvars), name, (void*)dest);
@@ -85,8 +85,11 @@ Data ExCompare(int comp, Node* node){
 }
 Data ExPARAMS(Node* node, ArrayUnit* actualParams){
 	//actual params should be array
-	Data *dup = (Data*)malloc(sizeof(Data));
-	memcpy(dup, actualParams->data, sizeof(Data));
+	Data *dup = createEmptyData();
+	Data *ptr = actualParams->data;
+	ptr = ptr->value.ptrValue;
+	memcpy(dup, ptr, sizeof(Data));
+
 	setItem(*(node->ptrlocalvars),node->data->value.strValue,dup);
 	actualParams = actualParams->next;
 	if(node->right != NULL){
@@ -101,10 +104,10 @@ Data ExFUNCALL(Node* node){
 	//set param
 	Data params = ExGET(node->left);
 	ExPARAMS(node->right->left, params.value.arrayValue);
-	return ExSTMT(node->right);
+	return Ex(node->right);
 }
 Data ExFUN(Node* node){
-	return ExSTMT(node->right);
+	return Ex(node->right);
 }
 void freeNode(Node* node){
 	if(node!=NULL){
@@ -112,8 +115,16 @@ void freeNode(Node* node){
 		freeNode(node->left);
 		freeNode(node->right);
 		if(node->ptrlocalvars!=NULL){
-			freeHash(*(node->ptrlocalvars));
+
+			printf ( "!!!!&hash %p !!!!!!!!!!!\n",  node->ptrlocalvars);
+			if(*(node->ptrlocalvars) != NULL)
+			{
+
+				printf ( "!!!!!!!!hash %p !!!!!!!!!!\n",  *(node->ptrlocalvars));
+				freeHash(*(node->ptrlocalvars));
+			}
 			*(node->ptrlocalvars) = NULL;
+			printf ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" );
 		}
 		if(node->data!=NULL){
 			freeData(node->data);
@@ -144,6 +155,12 @@ Node* createArray(ArrayUnit *arr){
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createArrayData(arr);
+	return ret;
+}
+Node* createPtr(void* value){
+	Node* ret = createEmptyNode();
+	ret->op =  GET;
+	ret->data = createPtrData(value);
 	return ret;
 }
 Node* createNOT(Node* expr, Hash * ptrlocalvars){
@@ -226,7 +243,10 @@ Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash* ptrl
 	Node* ret = createEmptyNode();
 	ret->op = FUNCALL;
 	ret->left = createArray(paramslist);
-	Node* fun = (Node*)getItem(*funHash, name);
+
+	Data* ptrfun = getItem(*funHash, name);
+	Node* fun = (Node*)ptrfun->value.ptrValue;
+	
 	ret->right = fun;
 	ret->ptrlocalvars = ptrlocalvars;
 	ret->ptrfuncs = funHash;
@@ -255,6 +275,8 @@ Data Ex(Node* node){
 			return ExFUNCALL(node);
 		case STMT:
 			return ExSTMT(node);
+		case FUN:
+			return ExFUN(node);
 		default:
 			break;   
 	}
