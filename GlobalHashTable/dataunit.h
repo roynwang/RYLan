@@ -50,6 +50,7 @@ Data* createStrData(char* value);
 Data* createVarData(char* name);
 Data* createArrayData(ArrayUnit* arr);
 Data* createPtrData(void* value);
+ArrayUnit* createArrayUnit(Data* value);
 
 Data adddata(Hash hash, Data* left, Data* right);
 Data subdata(Hash hash, Data* left, Data* right);

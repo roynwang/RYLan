@@ -165,6 +165,12 @@ Data* createPtrData(void* value){
 	ret->isOnHeap = 1;
 	ret->value.ptrValue = value;
 }
+ArrayUnit* createArrayUnit(Data* value){
+	ArrayUnit* tmp = (ArrayUnit*)malloc(sizeof(ArrayUnit));
+	tmp->data = value;
+	tmp->next = NULL;
+	return tmp;
+}
 
 int isTrue(Data* data){
 	return data->valueType == True? 1:0;

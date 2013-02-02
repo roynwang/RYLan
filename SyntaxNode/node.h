@@ -55,7 +55,7 @@ Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, H
 Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars);
 Node* createPARAMS(Node* param, Node* params);
 Node* createPARAM(char* name, Hash *ptrlocalvars);
-Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash *ptrlocalvars);
+Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash *ptrlocalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 

@@ -103,8 +103,10 @@ Data ExSTMT(Node* node){
 Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
-	Data params = ExGET(node->left);
-	ExPARAMS(node->right->left, params.value.arrayValue);
+	if(node->left!=NULL){
+		Data params = ExGET(node->left);
+		ExPARAMS(node->right->left, params.value.arrayValue);
+	}
 	return Ex(node->right);
 }
 Data ExFUN(Node* node){
@@ -251,15 +253,16 @@ Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, H
 	printf ( "done\n" );
 	ret->ptrfuncs = ptrfunhash;
 	//register the function
-
+	printf ( "register funcation '%s'\n", name );
 	Data* ptrfun = createPtrData(ret);
 	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;
 }
-Node* createFUNCALL(Hash *funHash, char* name, ArrayUnit* paramslist, Hash* ptrlocalvars){
+Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
 	ret->op = FUNCALL;
-	ret->left = createArray(paramslist);
+	ret->left = paramslist;
+//	ret->left = createArray(paramslist);
 
 	Data* ptrfun = getItem(*funHash, name);
 	Node* fun = (Node*)ptrfun->value.ptrValue;
