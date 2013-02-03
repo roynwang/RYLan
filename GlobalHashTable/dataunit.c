@@ -23,6 +23,7 @@
 
 Data trueData = {valueType: True};
 Data falseData = {valueType: False};
+Data emptyData = {valueType: Empty}; 
 
 char* catnewstr(const char* a, const char* b){
 	int lena = strlen(a);
@@ -133,6 +134,13 @@ Data* createEmptyData(){
 	return ret;
 }
 char* toString(Data* data){
+	if(data->valueType == ArrayType){
+		ArrayUnit *au = data->value.arrayValue;
+		while(au->data!=NULL){
+			printf ( "->>>%p\n",au->data );
+			au = au->next;
+		}
+	}
 	return "NEED TO IMPLEMENT toString()\n";
 }
 Data* createVarData(char* name){

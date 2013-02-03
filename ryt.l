@@ -22,6 +22,7 @@ fun         fun
 {ws}              {}
 "run"             { debugmsg("RUN");}
 "fun"             { debugmsg("FUN");return FUNDEF;}
+"print"           { return PRINT;}
 {id}              { yylval.str =strdup(yytext);debugmsg(yytext);return symbol;}
 {assign}          { return TOKENASSIGN;}
 {end}             { return SEMC;}

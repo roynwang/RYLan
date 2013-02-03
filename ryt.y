@@ -19,7 +19,7 @@ Node* mainfunc = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA
+%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT
 %token <str>  symbol
 %token <value> expr
 %type  <node> stmt stmts param params fundef arrayexpr
@@ -42,19 +42,21 @@ params         :  param  COMMA params                                     {$$ = 
                ;
 param          :  symbol                                                  {$$ = createPARAM($1,varshash);}
                ;
-stmts          :  stmts stmt                                              {$$ = createSTMTS($2,$1,varshash);}
+stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,varshash);}
                |  stmt                                                    {$$ = createSTMTS($1,NULL,varshash);}
 			   ;
 stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = createComplex(ASSIGN,createVar($1),createInt($3),varshash);}
 			   |  symbol arrayexpr SEMC /*fun cal*/                       {$$ = createFUNCALL(funshash,$1,$2,varshash);}
+			   |  PRINT LP symbol RP SEMC                                 {$$ = createDISPLAY(createVar($3),varshash);}
                ;
-arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}
+arrayexpr      :  LP arrayelements RP                                     { printf("!!!!array %p\n", $2);$$ = createArray($2);}
                ;
 arrayelements  :  arrayelement COMMA arrayelements                        {$1->next = $3; $$ = $1;}
-               |  arrayelement                                            {$$ = $1;}
+               |  arrayelement                                            {$$ = $1;
+			   printf("only 1 actual param\n");}
 			   |                                                          {$$ = NULL;}
 			   ;
-arrayelement   :  symbol                                                  {Data* tmp = createPtrData(getItem(*varshash,$1));$$ = createArrayUnit(tmp);}
+arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);printf("tmp = %p value = %p\n", tmp, tmp->value.varValue);}
                |  expr                                                    {$$ = createArrayUnit(createIntData($1));}
 			   ;
 
@@ -67,11 +69,15 @@ int main(){
 	mtrace();
 	varshash = (Hash*)malloc(sizeof(Hash*));
 	funshash = (Hash*)malloc(sizeof(Hash*));
+	//create node of print function
 	*varshash = initHash(65536);
 	*funshash  = initHash(65536);
 	printf("global vars = %p funcs = %p\n", varshash, funshash);
     printf("YACC started\n");
 	yyparse();
+	printf("---------------------MAIN--------------------\n");
+	Ex(mainfunc);
+	printf("---------------------DONE--------------------\n");
 	freeNode(funnode);
 	if(mainfunc!=NULL){
 		printf("free MAIN 1!!!!!!!!!!!\n");

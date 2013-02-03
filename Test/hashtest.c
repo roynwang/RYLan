@@ -22,6 +22,20 @@
 #include "../SyntaxNode/node.h"
 #include <mcheck.h>
 
+void displaytest(){
+	int hashsize = 65536;
+	Hash varshash = initHash(hashsize);
+	
+	setItem(varshash, "int1",createIntData(222));
+	setItem(varshash, "int2",createIntData(333));
+
+    Node* node = createDISPLAY(createVar("int1"),&varshash);
+
+	Ex(node);
+
+	freeNode(node);
+	freeHash(varshash);
+}
 
 void funtest(){
 
@@ -33,7 +47,7 @@ void funtest(){
 	setItem(varshash, "int2",createIntData(333));
 
 	ArrayUnit * paramlist = (ArrayUnit*)malloc(sizeof(ArrayUnit));
-	paramlist->data = createPtrData(getItem(varshash, "int1"));
+	paramlist->data = createVarData("int1");
 
 	paramlist->next = NULL;
 
@@ -66,7 +80,7 @@ void funtest(){
 
 	printf ( "fun = %p \n", fundef );
 	// create fun call node;
-	Node* call = createFUNCALL(&funhash,"funtest",paramlist,&varshash);
+	Node* call = createFUNCALL(&funhash,"funtest",createArray(paramlist),&varshash);
 	Ex(call);
 	p = getItem(varshash, "fParam");
 	printf("expected 223    / actual result %d\n",p->value.intValue);
@@ -246,5 +260,7 @@ main ( int argc, char *argv[] )
 	dataunittest();
 	iftest();
 //    nodetest();
+	displaytest();
+    
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

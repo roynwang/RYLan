@@ -23,6 +23,7 @@
 
 #define TRUE trueData
 #define FALSE falseData
+#define EMPTY emptyData
 
 typedef struct _ArrayUnit{
 	void* data;
@@ -44,6 +45,7 @@ typedef struct _Data{
 
 Data trueData ;
 Data falseData;
+Data emptyData;
 
 Data* createIntData(int value);
 Data* createStrData(char* value);
@@ -59,6 +61,7 @@ Data divdata(Hash hash, Data* left, Data* right);
 Data comparedata(Hash hash, Data* left, Data* right);
 Data* createEmptyData();
 char* toString(Data* data);
+Data* getValue(Hash hash, Data* data);
 int isTrue(Data* data);
 void freeData(Data* data);
 

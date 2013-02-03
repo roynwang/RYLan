@@ -36,6 +36,13 @@ Data ExGET(Node* node){
 	printf ( "Executing GET ... ...\n" );
 	return *(node->data);
 }
+Data ExDISPLAY(Node* node){
+	printf("Execute DISPLAY ... ...\n");
+	Data var = Ex(node->right);
+	printf ( ".............. %s\n", var.value.varValue);
+	Data* intv = getItem(*(node->ptrlocalvars), var.value.varValue);
+	printf("!!!REUSLT = %d\n", intv->value.intValue); 
+}
 Data ExASSIGN(Node* node){
 	printf ( "Executing ASSIGN ... ...\n" );
 	const char* name = Ex(node->left).value.varValue;
@@ -86,10 +93,8 @@ Data ExCompare(int comp, Node* node){
 Data ExPARAMS(Node* node, ArrayUnit* actualParams){
 	//actual params should be array
 	Data *dup = createEmptyData();
-	Data *ptr = actualParams->data;
-	ptr = ptr->value.ptrValue;
-	memcpy(dup, ptr, sizeof(Data));
-
+	Data * av = getValue(*(node->ptrlocalvars),actualParams->data);
+	memcpy(dup, av, sizeof(Data));
 	setItem(*(node->ptrlocalvars),node->data->value.strValue,dup);
 	actualParams = actualParams->next;
 	if(node->right != NULL){
@@ -103,8 +108,11 @@ Data ExSTMT(Node* node){
 Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
+	printf ( "Executing FUNCALL\n" );
 	if(node->left!=NULL){
 		Data params = ExGET(node->left);
+		printf("param array : %p\n", params.value.arrayValue);
+
 		ExPARAMS(node->right->left, params.value.arrayValue);
 	}
 	return Ex(node->right);
@@ -163,6 +171,13 @@ Node* createPtr(void* value){
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createPtrData(value);
+	return ret;
+}
+Node* createDISPLAY(Node* value, Hash* ptrlocalvars){
+	Node* ret = createEmptyNode();
+	ret->op =  DISPLAY;
+	ret->ptrlocalvars = ptrlocalvars;
+	ret->right = value;
 	return ret;
 }
 
@@ -274,6 +289,7 @@ Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrlocalv
 }
 
 Data Ex(Node* node){
+	if(node == NULL) return EMPTY;
 	switch(node->op){
 		case GET:
 			return ExGET(node);
@@ -296,7 +312,9 @@ Data Ex(Node* node){
 		case STMT:
 			return ExSTMT(node);
 		case FUN:
-			return ExFUN(node);
+		return ExFUN(node);
+		case DISPLAY:
+			return ExDISPLAY(node);
 		default:
 			break;   
 	}
