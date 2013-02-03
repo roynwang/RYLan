@@ -36,6 +36,7 @@ typedef enum {
 }OpEnum;
 typedef struct _Node{
 	int op;
+	char ismarkedforfree;
 	struct _Node* left;
 	struct _Node* right;
 	Data* data;
@@ -59,6 +60,7 @@ Node* createPARAM(char* name, Hash *ptrlocalvars);
 Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash *ptrlocalvars);
 Node* createDISPLAY(Node* value, Hash* ptrlocalvars);
 Node* createEXPR(Node* node, Hash* ptrlocalvars);
+Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 

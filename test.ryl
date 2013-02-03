@@ -1,4 +1,4 @@
-fun test (var){var=2 + var; print(var); } 
+fun test (var){ while(var<10000){ var=1 + var;} print(var); } 
 fun main () {
 	i = 1;
 	test(i);

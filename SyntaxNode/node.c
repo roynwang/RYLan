@@ -23,6 +23,7 @@
 
 Node * createEmptyNode(){
 	Node* ret = (Node*)malloc(sizeof(Node));
+	ret->ismarkedforfree = 0;
 	ret->op = NONE;
 	ret->left = NULL;
 	ret->right = NULL;
@@ -121,7 +122,8 @@ Data ExFUN(Node* node){
 	return Ex(node->right);
 }
 void freeNode(Node* node){
-	if(node!=NULL){
+	if(node!=NULL && node->ismarkedforfree == 0){
+		node->ismarkedforfree = 1;
 		printf ( "free NODE: %p\n", node);
 		freeNode(node->left);
 		freeNode(node->right);

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "SyntaxNode/node.h"
 #include "GlobalHashTable/hash.h"
 #define MAIN "main"
@@ -19,11 +20,11 @@ Node* mainfunc = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT
-%left OPADD
+%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP 
+%left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop 
 %type  <arrelem> arrayelement arrayelements
 %%
 prog           :  fundefs                                                  {printf("xxxxxx");}
@@ -47,6 +48,7 @@ param          :  symbol                                                  {$$ = 
                ;
 
 stmtsblock     :  BLOCKSTART stmts BLOCKEND                               {$$ = $2;}
+               |  stmt                                                    {$$ = $1;}
                ;
 
 stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,varshash);}
@@ -55,13 +57,18 @@ stmts          :  stmt stmts                                              {$$ = 
 stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,varshash);}
 			   |  symbol arrayexpr SEMC /*fun cal*/                       {$$ = createFUNCALL(funshash,$1,$2,varshash);}
 			   |  PRINT LP symbol RP SEMC                                 {$$ = createDISPLAY(createVar($3),varshash);}
+			   |  whileloop                                                    {$$ = $1;}
                ;
+
+
+whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
+               ;
+
 arrayexpr      :  LP arrayelements RP                                     { printf("!!!!array %p\n", $2);$$ = createArray($2);}
                ;
 arrayelements  :  arrayelement COMMA arrayelements                        {$1->next = $3; $$ = $1;}
                |  arrayelement                                            {$$ = $1;
-			   printf("only 1 actual param\n");}
-			   |                                                          {$$ = NULL;}
+			   printf("only 1 actual param\n");} |                                                          {$$ = NULL;}
 			   ;
 arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);printf("tmp = %p value = %p\n", tmp, tmp->value.varValue);}
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
@@ -69,6 +76,7 @@ arrayelement   :  symbol                                                  {Data*
 expr           :  intvalue                                                {$$ = createInt($1);} 
                |  symbol                                                  {$$ = createVar($1);}
                |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,varshash);}
+			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,varshash);}
                ;
 
 %%
@@ -103,7 +111,6 @@ int main(){
 	return 0;
 }
 void yyerror(char *s) { 
-	printf("xxxxxxxxxxxxxxxxxxx\n");
 	fprintf(stdout, "%s\n", s); 
 	freeNode(funnode);
 	freeHash(*varshash);

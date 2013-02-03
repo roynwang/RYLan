@@ -19,8 +19,9 @@ fun         fun
 
 %%
 {ws}              {}
-"run"             { debugmsg("RUN");}
 "fun"             { debugmsg("FUN");return FUNDEF;}
+"<"               { return OPST;}
+"while"           { return WHILELOOP;}
 "print"           { return PRINT;}
 {id}              { yylval.str =strdup(yytext);debugmsg(yytext);return symbol;}
 {assign}          { return TOKENASSIGN;}
