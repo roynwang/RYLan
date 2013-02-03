@@ -20,10 +20,11 @@ Node* mainfunc = NULL;
 	ArrayUnit *arrelem;
 }
 %token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT
-%token <str>  symbol
-%token <value> expr
-%type  <node> stmt stmts param params fundef arrayexpr
-%type <arrelem> arrayelement arrayelements
+%left OPADD
+%token <str>  symbol strvalue
+%token <value> intvalue
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock
+%type  <arrelem> arrayelement arrayelements
 %%
 prog           :  fundefs                                                  {printf("xxxxxx");}
                ;
@@ -31,21 +32,27 @@ fundefs        :  fundefs fundef                                           {}
                |  fundef                                                   {}
 			   ;
 
-fundef         :  FUNDEF symbol LP params RP BLOCKSTART stmts BLOCKEND    {$$ = createFUN($2,$4,$7,varshash,funshash);
+fundef         :  FUNDEF symbol LP params RP stmtsblock                   {$$ = createFUN($2,$4,$6,varshash,funshash);
 if(strcmp(MAIN,$2)==0) mainfunc = $$;
 else funnode = $$;
 }
                ;
+
 params         :  param  COMMA params                                     {$$ = createPARAMS($1,$3);}
 			   |  param                                                   {$$ = $1;}
 			   |                                                          {printf("NO params"); $$ = NULL;}
                ;
+
 param          :  symbol                                                  {$$ = createPARAM($1,varshash);}
                ;
+
+stmtsblock     :  BLOCKSTART stmts BLOCKEND                               {$$ = $2;}
+               ;
+
 stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,varshash);}
                |  stmt                                                    {$$ = createSTMTS($1,NULL,varshash);}
 			   ;
-stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = createComplex(ASSIGN,createVar($1),createInt($3),varshash);}
+stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,varshash);}
 			   |  symbol arrayexpr SEMC /*fun cal*/                       {$$ = createFUNCALL(funshash,$1,$2,varshash);}
 			   |  PRINT LP symbol RP SEMC                                 {$$ = createDISPLAY(createVar($3),varshash);}
                ;
@@ -57,8 +64,12 @@ arrayelements  :  arrayelement COMMA arrayelements                        {$1->n
 			   |                                                          {$$ = NULL;}
 			   ;
 arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);printf("tmp = %p value = %p\n", tmp, tmp->value.varValue);}
-               |  expr                                                    {$$ = createArrayUnit(createIntData($1));}
+               |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
+expr           :  intvalue                                                {$$ = createInt($1);} 
+               |  symbol                                                  {$$ = createVar($1);}
+               |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,varshash);}
+               ;
 
 %%
 

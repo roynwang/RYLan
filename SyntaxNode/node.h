@@ -58,6 +58,7 @@ Node* createPARAMS(Node* param, Node* params);
 Node* createPARAM(char* name, Hash *ptrlocalvars);
 Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash *ptrlocalvars);
 Node* createDISPLAY(Node* value, Hash* ptrlocalvars);
+Node* createEXPR(Node* node, Hash* ptrlocalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 
