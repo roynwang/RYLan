@@ -1,9 +1,8 @@
 %{
 #include "y.tab.c"
-#include <stdio.h>
 #include <string.h>
+#include "debug.h"
 
-void debugmsg(char* msg);
 %}
 
 delim       [ \t\n]
@@ -18,28 +17,24 @@ number      {digit}+
 fun         fun
 
 %%
-{ws}              {}
-"fun"             { debugmsg("FUN");return FUNDEF;}
-"<"               { return OPST;}
-"while"           { return WHILELOOP;}
-"print"           { return PRINT;}
-{id}              { yylval.str =strdup(yytext);debugmsg(yytext);return symbol;}
-{assign}          { return TOKENASSIGN;}
-{end}             { return SEMC;}
-{number}          { yylval.value = atoi(yytext); debugmsg(yytext); return intvalue; }
-"{"               { debugmsg("BLOCKSTART"); return BLOCKSTART;}
-"}"               { debugmsg("BLOCKEND");return BLOCKEND;}
-"("               { debugmsg("LP");return LP;}
-")"               { debugmsg("RP");return RP;}
-","               { return COMMA;}
-"+"               { return OPADD;}
+"fun"             { debugmsg(LEX,"FUN");return FUNDEF;}
+"<"               { debugmsg(LEX,"<");return OPST;}
+"while"           { debugmsg(LEX,"WHILELOOP");return WHILELOOP;}
+"print"           { debugmsg(LEX,"PRINT");return PRINT;}
+{id}              { yylval.str =strdup(yytext);debugmsg(LEX,"symbol = %s", yylval.str);return symbol;}
+{assign}          { debugmsg(LEX,"ASSIGN");return TOKENASSIGN;}
+{end}             { debugmsg(LEX,";");return SEMC;}
+{number}          { yylval.value = atoi(yytext);debugmsg(LEX,"number = %d", yylval.value);return intvalue; }
+"{"               { debugmsg(LEX,"BLOCKSTART"); return BLOCKSTART;}
+"}"               { debugmsg(LEX,"BLOCKEND");return BLOCKEND;}
+"("               { debugmsg(LEX,"(");return LP;}
+")"               { debugmsg(LEX,")");return RP;}
+","               { debugmsg(LEX,",");return COMMA;}
+"+"               { debugmsg(LEX,"+");return OPADD;}
 
 %%
 int yywrap()
 {
 		return 1;
-}
-void debugmsg(char* msg){
-		printf("[LEX] %s\n", msg);
 }
 

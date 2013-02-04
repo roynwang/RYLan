@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "node.h"
+#include "../debug.h"
 #include <stdio.h>
 
 
@@ -34,28 +35,27 @@ Node * createEmptyNode(){
 }
 
 Data ExGET(Node* node){
-	printf ( "Executing GET ... ...\n" );
+	debugmsg(EXECUTE, "GET ... ... %p", node);
 	return *(node->data);
 }
 Data ExDISPLAY(Node* node){
-	printf("Execute DISPLAY ... ...\n");
+	debugmsg(EXECUTE, "DISPLAY ... ... %p", node);
 	Data var = Ex(node->right);
-	printf ( ".............. %s\n", var.value.varValue);
 	Data* intv = getItem(*(node->ptrlocalvars), var.value.varValue);
 	printf("!!!REUSLT = %d\n", intv->value.intValue); 
 }
 Data ExASSIGN(Node* node){
-	printf ( "Executing ASSIGN ... ...\n" );
 	const char* name = Ex(node->left).value.varValue;
 	Data src = Ex(node->right);
 	Data* dest = createEmptyData();
 	memcpy(dest, &src, sizeof(src));
-	printf ( "ASSIGN: Name = %s value = %d\n", name, dest->value.intValue );
+	debugmsg (EXECUTE, "ASSIGN: Name = %s value = %d", name, dest->value.intValue );
 	setItem(*(node->ptrlocalvars), name, (void*)dest);
 	return TRUE;
 }
 Data ExADD(Node* node){
-	printf ( "Executing ADD ... ...\n" );
+
+	debugmsg(EXECUTE, "ADD ... ... %p", node);
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
 	return adddata(*(node->ptrlocalvars), &l, &r);
@@ -109,11 +109,9 @@ Data ExSTMT(Node* node){
 Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
-	printf ( "Executing FUNCALL\n" );
+	debugmsg(EXECUTE,"executing FUN ... ... %p", node);
 	if(node->left!=NULL){
 		Data params = ExGET(node->left);
-		printf("param array : %p\n", params.value.arrayValue);
-
 		ExPARAMS(node->right->left, params.value.arrayValue);
 	}
 	return Ex(node->right);
@@ -124,19 +122,15 @@ Data ExFUN(Node* node){
 void freeNode(Node* node){
 	if(node!=NULL && node->ismarkedforfree == 0){
 		node->ismarkedforfree = 1;
-		printf ( "free NODE: %p\n", node);
+		debugmsg(FREE,"free node ... ... %p", node);
 		freeNode(node->left);
 		freeNode(node->right);
 		if(node->ptrlocalvars!=NULL){
-			printf ( "!!!!&hash %p !!!!!!!!!!!\n",  node->ptrlocalvars);
 			if(*(node->ptrlocalvars) != NULL)
 			{
-
-				printf ( "!!!!!!!!hash %p !!!!!!!!!!\n",  *(node->ptrlocalvars));
 				freeHash(*(node->ptrlocalvars));
 			}
 			*(node->ptrlocalvars) = NULL;
-			printf ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" );
 		}
 		if(node->data!=NULL){
 			freeData(node->data);
@@ -208,9 +202,8 @@ Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrlocalvar
 	return ret;
 }
 Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
-
-	printf ( "creating expr: %d \n",op );
 	Node* ret = createEmptyNode();
+	debugmsg(CREATE, "creating expr ... ... %p", ret );
 	ret->op =  op;
 	ret->left = left;
 	ret->right = right;
@@ -220,10 +213,11 @@ Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
 
 Node* createPARAM(char* name, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
+
+	debugmsg (CREATE, "creating param ... ... %p %s", ret, name );
 	ret->op =  PARAMS;
 	ret->ptrlocalvars = ptrlocalvars;
 	ret->data = createStrData(name);
-	printf ( "creating param: %p %s\n", ret, name );
 	return ret;
 }
 
@@ -234,11 +228,11 @@ Node* createPARAMS(Node* param, Node* params){
 
 Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
+	debugmsg(CREATE,"creating stmts ... ...%p", ret);
 	ret->op =  STMT;
 	ret->left = stmt;
 	ret->right = stmts;
 	ret->ptrlocalvars = ptrlocalvars;
-	printf("create STMTS %p\n", ret);
 	return ret;
 }
 
@@ -256,21 +250,20 @@ Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrloc
 }
 
 Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash){
-	printf ( "param = %p stmts = %p varstable = %p\n",paramslist, stmts, ptrlocalvars );
-	printf("creating FUN \n");
 	Node* ret = createEmptyNode();
-	printf ( "assing op ... " );
+	debugmsg ( CREATE, "creating funcation ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
+	debugmsg ( CREATE,"assing op ... " );
 	ret->op = FUN;
-	printf ( "done\n assign ptrlocalvars ..." );
+	debugmsg ( CREATE, "assign ptrlocalvars ..." );
 	ret->ptrlocalvars = ptrlocalvars;
-	printf ( "done\n assign param %p... ", paramslist );
+	debugmsg ( CREATE,"assign param %p... ", paramslist );
 	ret->left = paramslist;
-	printf ( "done\n assign stmts ..." );
+	debugmsg ( CREATE,"assign stmts ..." );
 	ret->right = stmts;
-	printf ( "done\n" );
+	debugmsg( CREATE,"done" );
 	ret->ptrfuncs = ptrfunhash;
 	//register the function
-	printf ( "register funcation '%s'\n", name );
+	debugmsg( CREATE,"register funcation '%s'", name );
 	Data* ptrfun = createPtrData(ret);
 	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;

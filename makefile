@@ -7,31 +7,30 @@ SYNTAX = SyntaxNode
 TEST = Test
 DEBUG =  -g
 
-prog: lex.yy.c node.o hash.o dataunit.o
-	$(CC) lex.yy.c node.o hash.o dataunit.o -o $(PARSER) $(DEBUG)
+prog: lex.yy.c node.o hash.o dataunit.o debug.o
+	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o -o $(PARSER) $(DEBUG)
 
-lex.yy.c: ryt.l y.tab.c
+lex.yy.c: ryt.l y.tab.c debug.h
 	$(LEX) ryt.l
 
-y.tab.c: ryt.y
+y.tab.c: ryt.y debug.h
 	$(YACC) ryt.y
 
-utility.o: utility.h utility.c
-	$(CC) -c utility.h utility.c
 
+test: $(TEST)/hashtest.c dataunit.o node.o hash.o debug.o
+	$(CC) $(TEST)/hashtest.c dataunit.o node.o hash.o debug.o -o StructureTest $(DEBUG)
 
-test: $(TEST)/hashtest.c dataunit.o node.o hash.o
-	$(CC) $(TEST)/hashtest.c dataunit.o node.o hash.o -o StructureTest $(DEBUG)
+dataunit.o: $(HASH)/dataunit.h $(HASH)/dataunit.c debug.h
+	$(CC) -c $(HASH)/dataunit.h $(HASH)/dataunit.c debug.h $(DEBUG)
 
-dataunit.o: $(HASH)/dataunit.h $(HASH)/dataunit.c
-	$(CC) -c $(HASH)/dataunit.h $(HASH)/dataunit.c $(DEBUG)
+hash.o: $(HASH)/hash.h $(HASH)/hash.c debug.h
+	$(CC) -c $(HASH)/hash.h $(HASH)/hash.c  debug.h $(DEBUG)
 
-hash.o: $(HASH)/hash.h $(HASH)/hash.c
-	$(CC) -c $(HASH)/hash.h $(HASH)/hash.c  $(DEBUG)
+node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c debug.o
+	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c  debug.o $(DEBUG)
 
-node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c
-	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c  $(DEBUG)
-
+debug.o: debug.h debug.c
+	$(CC) -c debug.h debug.c $(DEBUG)
 
 
 clean:

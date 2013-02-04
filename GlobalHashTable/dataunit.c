@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dataunit.h"
-#include <stdio.h>
 #include <memory.h>
+#include "../debug.h"
 
 Data trueData = {valueType: True};
 Data falseData = {valueType: False};
@@ -66,11 +66,8 @@ Data adddata(Hash hash, Data* left, Data* right){
 		ret.value.intValue = left->value.intValue + right->value.intValue;
 	}
 	if(left->valueType == StrType){
-
-		printf ( "left= %s right = %s\n",left->value.strValue, right->value.strValue );
 		ret.valueType = StrType;
 		ret.value.strValue = catnewstr(left->value.strValue,right->value.strValue);
-		printf ( "result = %s\n", ret.value.strValue );
 		ret.isOnHeap = 1;
 	}
 	return ret;
@@ -137,11 +134,10 @@ char* toString(Data* data){
 	if(data->valueType == ArrayType){
 		ArrayUnit *au = data->value.arrayValue;
 		while(au->data!=NULL){
-			printf ( "->>>%p\n",au->data );
 			au = au->next;
 		}
 	}
-	return "NEED TO IMPLEMENT toString()\n";
+	return "NEED TO IMPLEMENT toString()";
 }
 Data* createVarData(char* name){
 	Data* ret = createEmptyData();
@@ -193,14 +189,14 @@ void freeArray(ArrayUnit* arr){
 	}
 }
 void freeData(Data* data){
-	printf ( "free data %p type: %d\n",data, data->valueType );
+	debugmsg(DATASTRUCTURE, "free data %p",data, data->valueType );
 	switch(data->valueType){
 		case StrType:
 			if(data->isOnHeap == 1)
 				free(data->value.strValue);
 			break;
 		case ArrayType:
-			printf ( "free arrary %p\n", data->value.arrayValue );
+//			printf ( "free arrary %p\n", data->value.arrayValue );
 			freeArray(data->value.arrayValue);
 			break;
 		default:

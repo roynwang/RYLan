@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "SyntaxNode/node.h"
 #include "GlobalHashTable/hash.h"
+#include "debug.h"
 #define MAIN "main"
 void  yyerror(char*s);
 void* cur = NULL;
@@ -27,7 +28,7 @@ Node* mainfunc = NULL;
 %type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop 
 %type  <arrelem> arrayelement arrayelements
 %%
-prog           :  fundefs                                                  {printf("xxxxxx");}
+prog           :  fundefs                                                  {}
                ;
 fundefs        :  fundefs fundef                                           {}
                |  fundef                                                   {}
@@ -41,7 +42,7 @@ else funnode = $$;
 
 params         :  param  COMMA params                                     {$$ = createPARAMS($1,$3);}
 			   |  param                                                   {$$ = $1;}
-			   |                                                          {printf("NO params"); $$ = NULL;}
+			   |                                                          {$$ = NULL;}
                ;
 
 param          :  symbol                                                  {$$ = createPARAM($1,varshash);}
@@ -64,13 +65,13 @@ stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = 
 whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
                ;
 
-arrayexpr      :  LP arrayelements RP                                     { printf("!!!!array %p\n", $2);$$ = createArray($2);}
+arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}
                ;
 arrayelements  :  arrayelement COMMA arrayelements                        {$1->next = $3; $$ = $1;}
-               |  arrayelement                                            {$$ = $1;
-			   printf("only 1 actual param\n");} |                                                          {$$ = NULL;}
+               |  arrayelement                                            {$$ = $1;}
+			   |                                                          {$$ = NULL;}
 			   ;
-arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);printf("tmp = %p value = %p\n", tmp, tmp->value.varValue);}
+arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);}
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
 expr           :  intvalue                                                {$$ = createInt($1);} 
@@ -81,17 +82,15 @@ expr           :  intvalue                                                {$$ = 
 
 %%
 
-void execute(){
-	printf("Executing function \n");
-}
 int main(){	
 	mtrace();
+    debugmsg(YACC, "START YACC ... ...");
 	varshash = (Hash*)malloc(sizeof(Hash*));
 	funshash = (Hash*)malloc(sizeof(Hash*));
 	//create node of print function
 	*varshash = initHash(65536);
 	*funshash  = initHash(65536);
-	printf("global vars = %p funcs = %p\n", varshash, funshash);
+	debugmsg(YACC,"global vars = %p funcs = %p\n", varshash, funshash);
     printf("YACC started\n");
 	yyparse();
 	printf("---------------------MAIN--------------------\n");
@@ -99,7 +98,6 @@ int main(){
 	printf("---------------------DONE--------------------\n");
 	freeNode(funnode);
 	if(mainfunc!=NULL){
-		printf("free MAIN 1!!!!!!!!!!!\n");
 		freeNode(mainfunc);
 	}
 	freeHash(*varshash);

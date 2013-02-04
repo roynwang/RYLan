@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hash.h"
+#include "../debug.h"
 
 size_t getBKDRHash(const char* input, size_t hashsize){
 	size_t hash = 0;
@@ -30,6 +31,7 @@ size_t getBKDRHash(const char* input, size_t hashsize){
 }
 
 Hash initHash(size_t size){
+    debugmsg(DATASTRUCTURE, "intialize Hash table ... ...");
 	Hash ret = (Hash)malloc(sizeof(structHash));
 	ret->size = size;
 	ret->table = (void**)malloc(sizeof(void*)*size);
@@ -38,9 +40,9 @@ Hash initHash(size_t size){
 		ret->table[--tmp] = NULL;
 	}
 	return ret;
-	printf ( "created Hash %p\n", ret );
 }
 void freeHash(Hash hash){
+    debugmsg(FREE, "free Hash table ... ...");
 	if(hash == NULL) return;
 	//need to free all items
 	if(hash->table != NULL){
