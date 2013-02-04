@@ -15,6 +15,7 @@
  * =====================================================================================
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include "debug.h"
 void debugmsg(int level, char* fmt, ...){
 
@@ -46,6 +47,8 @@ void debugmsg(int level, char* fmt, ...){
 		case FREE:
 			str = "6 [FREE]";
 			break;
+		default:
+			return;
 	}
 	printf("%s: %s\n", str, buffer);
 }

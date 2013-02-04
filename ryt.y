@@ -90,7 +90,7 @@ int main(){
 	//create node of print function
 	*varshash = initHash(65536);
 	*funshash  = initHash(65536);
-	debugmsg(YACC,"global vars = %p funcs = %p\n", varshash, funshash);
+	debugmsg(YACC,"global vars = %p funcs = %p", varshash, funshash);
     printf("YACC started\n");
 	yyparse();
 	printf("---------------------MAIN--------------------\n");

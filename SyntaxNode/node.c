@@ -251,14 +251,14 @@ Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrloc
 
 Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash){
 	Node* ret = createEmptyNode();
-	debugmsg ( CREATE, "creating funcation ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
-	debugmsg ( CREATE,"assing op ... " );
+	debugmsg(CREATE, "creating funcation ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
+	debugmsg(CREATE,"assing op ..." );
 	ret->op = FUN;
-	debugmsg ( CREATE, "assign ptrlocalvars ..." );
+	debugmsg(CREATE, "assign ptrlocalvars ..." );
 	ret->ptrlocalvars = ptrlocalvars;
-	debugmsg ( CREATE,"assign param %p... ", paramslist );
+	debugmsg(CREATE,"assign param ... ...%p", paramslist );
 	ret->left = paramslist;
-	debugmsg ( CREATE,"assign stmts ..." );
+	debugmsg(CREATE,"assign stmts ..." );
 	ret->right = stmts;
 	debugmsg( CREATE,"done" );
 	ret->ptrfuncs = ptrfunhash;

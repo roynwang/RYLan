@@ -26,8 +26,8 @@ dataunit.o: $(HASH)/dataunit.h $(HASH)/dataunit.c debug.h
 hash.o: $(HASH)/hash.h $(HASH)/hash.c debug.h
 	$(CC) -c $(HASH)/hash.h $(HASH)/hash.c  debug.h $(DEBUG)
 
-node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c debug.o
-	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c  debug.o $(DEBUG)
+node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c 
+	$(CC) -c $(SYNTAX)/node.h $(SYNTAX)/node.c  $(DEBUG)
 
 debug.o: debug.h debug.c
 	$(CC) -c debug.h debug.c $(DEBUG)
