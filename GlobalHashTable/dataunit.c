@@ -40,6 +40,8 @@ char* catnewstr(const char* a, const char* b){
 
 
 void typecheck(Data* left, Data* right){
+
+	debugmsg(EXECUTE,"type checking ... ... %s %s", toString(left), toString(right) );
 	if(left->valueType!= right->valueType){
 		exit(0);
 	}
@@ -58,18 +60,21 @@ Data* getValue(Hash hash, Data* data){
 }
 Data adddata(Hash hash, Data* left, Data* right){
 	Data ret;
+	debugmsg(EXECUTE,"ADD DATA ... ...");
 	left = getValue(hash,left);
 	right = getValue(hash,right);
 	typecheck(left, right);
 	if(left->valueType == IntType){
 		ret.valueType = IntType;
 		ret.value.intValue = left->value.intValue + right->value.intValue;
+		debugmsg(EXECUTE,"ADD RESULT %d", ret.value.intValue);
 	}
 	if(left->valueType == StrType){
 		ret.valueType = StrType;
 		ret.value.strValue = catnewstr(left->value.strValue,right->value.strValue);
 		ret.isOnHeap = 1;
 	}
+	debugmsg (EXECUTE, "DONE ... ..." );
 	return ret;
 }
 Data subdata(Hash hash, Data* left, Data* right){
@@ -131,13 +136,25 @@ Data* createEmptyData(){
 	return ret;
 }
 char* toString(Data* data){
-	if(data->valueType == ArrayType){
-		ArrayUnit *au = data->value.arrayValue;
-		while(au->data!=NULL){
-			au = au->next;
-		}
+	if(data == NULL) return "NULL";
+	switch(data->valueType){
+		case ArrayType:
+			return "Array";
+		case StrType:
+			return "String";
+		case IntType:
+			return "Integer";
+		case PtrType:
+			return "Pointer";
+		case True:
+			return "True";
+		case False:
+			return "False";
+		case Empty:
+			return "Empty";
+		default:
+			break;
 	}
-	return "NEED TO IMPLEMENT toString()";
 }
 Data* createVarData(char* name){
 	Data* ret = createEmptyData();
@@ -196,7 +213,6 @@ void freeData(Data* data){
 				free(data->value.strValue);
 			break;
 		case ArrayType:
-//			printf ( "free arrary %p\n", data->value.arrayValue );
 			freeArray(data->value.arrayValue);
 			break;
 		default:

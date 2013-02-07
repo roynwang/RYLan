@@ -1,0 +1,11 @@
+fun test (var){
+	while(var<10){
+		var=1 + var;
+	}
+	print(var);
+} 
+fun main () {
+	i = 1;
+	test(i);
+	print (i);
+}

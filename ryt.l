@@ -20,6 +20,9 @@ fun         fun
 "fun"             { debugmsg(LEX,"FUN");return FUNDEF;}
 "<"               { debugmsg(LEX,"<");return OPST;}
 "while"           { debugmsg(LEX,"WHILELOOP");return WHILELOOP;}
+"if"              { debugmsg(LEX,"IFSTMT"); return IFSTMT;}
+"else"            { debugmsg(LEX,"ELSESTMT"); return ELSESTMT;}
+"for"             { debugmsg(LEX,"FORLOOP"); return FORLOOP;}
 "print"           { debugmsg(LEX,"PRINT");return PRINT;}
 {id}              { yylval.str =strdup(yytext);debugmsg(LEX,"symbol = %s", yylval.str);return symbol;}
 {assign}          { debugmsg(LEX,"ASSIGN");return TOKENASSIGN;}

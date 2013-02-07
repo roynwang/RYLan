@@ -21,6 +21,17 @@
 #include "../debug.h"
 #include <stdio.h>
 
+char* optoStr(int op){
+	switch(op){
+		case ST:
+			return "ST";
+		case ADD:
+			return "ADD";
+		default:
+			return "DEFAULT";
+
+	}
+}
 
 Node * createEmptyNode(){
 	Node* ret = (Node*)malloc(sizeof(Node));
@@ -54,7 +65,6 @@ Data ExASSIGN(Node* node){
 	return TRUE;
 }
 Data ExADD(Node* node){
-
 	debugmsg(EXECUTE, "ADD ... ... %p", node);
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
@@ -77,7 +87,9 @@ Data ExDIV(Node* node){
 }
 Data ExIF(Node* node){
 	Data l = Ex(node->left);
+	debugmsg (EXECUTE, "executing if ... ..." );
 	if(isTrue(&l)){
+		debugmsg (EXECUTE, "TRUE ... ..." );
 		Ex(node->right);
 		return TRUE;
 	}
@@ -85,6 +97,7 @@ Data ExIF(Node* node){
 }
 Data ExCompare(int comp, Node* node){
 	if(comp == ST){
+		debugmsg(EXECUTE, "executing ST ... ...");
 		Data l = Ex(node->left);
 		Data r = Ex(node->right);
 		Data ret = comparedata(*(node->ptrlocalvars),&l,&r);
@@ -143,21 +156,26 @@ Node* createVar(char* name){
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createVarData(name);
+	
+	debugmsg(CREATE,"%p create var ... ... %s", ret,name);
 	return ret;
 }
 Node* createStr(char* value){
 	Node* ret = createEmptyNode();;
 	ret->op =  GET;
 	ret->data = createStrData(value);
+	debugmsg(CREATE,"%p create str ... ... %s", ret, value);
 	return ret;
 }
 Node* createInt(int value){
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createIntData(value);
+	debugmsg(CREATE,"%p create int ... ... %d",ret, value);
 	return ret;
 }
 Node* createArray(ArrayUnit *arr){
+	debugmsg(CREATE,"create arr ... ... %p",arr);
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createArrayData(arr);
@@ -186,6 +204,7 @@ Node* createNOT(Node* expr, Hash * ptrlocalvars){
 }
 Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars){
 	Node* ret = createEmptyNode();
+	debugmsg(CREATE, "creating if ... ... %p", ret );
 	ret->op =  IF;
 	ret->left = expr;
 	ret->right = thenstmt;
@@ -203,7 +222,7 @@ Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrlocalvar
 }
 Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
-	debugmsg(CREATE, "creating expr ... ... %p", ret );
+	debugmsg(CREATE, "creating expr ... ... %p (%s %p %p)",ret, optoStr(op), left,right);
 	ret->op =  op;
 	ret->left = left;
 	ret->right = right;
@@ -213,7 +232,6 @@ Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
 
 Node* createPARAM(char* name, Hash* ptrlocalvars){
 	Node* ret = createEmptyNode();
-
 	debugmsg (CREATE, "creating param ... ... %p %s", ret, name );
 	ret->op =  PARAMS;
 	ret->ptrlocalvars = ptrlocalvars;
@@ -251,7 +269,7 @@ Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrloc
 
 Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash){
 	Node* ret = createEmptyNode();
-	debugmsg(CREATE, "creating funcation ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
+	debugmsg(CREATE, "creating function ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
 	debugmsg(CREATE,"assing op ..." );
 	ret->op = FUN;
 	debugmsg(CREATE, "assign ptrlocalvars ..." );
@@ -307,11 +325,12 @@ Data Ex(Node* node){
 		case STMT:
 			return ExSTMT(node);
 		case FUN:
-		return ExFUN(node);
+			return ExFUN(node);
 		case DISPLAY:
 			return ExDISPLAY(node);
 		default:
 			break;   
 	}
 }
+
 

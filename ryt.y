@@ -21,11 +21,13 @@ Node* mainfunc = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token  TOKENASSIGN  SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP 
+%token SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP
+
+%right TOKENASSIGN    /*less priority than calculate OP*/ 
 %left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop 
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt
 %type  <arrelem> arrayelement arrayelements
 %%
 prog           :  fundefs                                                  {}
@@ -55,14 +57,16 @@ stmtsblock     :  BLOCKSTART stmts BLOCKEND                               {$$ = 
 stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,varshash);}
                |  stmt                                                    {$$ = createSTMTS($1,NULL,varshash);}
 			   ;
-stmt           :  symbol TOKENASSIGN expr SEMC  /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,varshash);}
-			   |  symbol arrayexpr SEMC /*fun cal*/                       {$$ = createFUNCALL(funshash,$1,$2,varshash);}
-			   |  PRINT LP symbol RP SEMC                                 {$$ = createDISPLAY(createVar($3),varshash);}
-			   |  whileloop                                                    {$$ = $1;}
+
+stmt		   :  expr SEMC                                               {$$ = $1;}
+               |  whileloop                                               {$$ = $1;}
+
+			   |  forstmt                                                 {$$ = $1;}
+			   ;
+whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
                ;
 
-
-whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
+forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock       {$$ = createFOR($3, $5, $7, $9, varshash);}
                ;
 
 arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}
@@ -75,11 +79,13 @@ arrayelement   :  symbol                                                  {Data*
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
 expr           :  intvalue                                                {$$ = createInt($1);} 
+			   |  symbol TOKENASSIGN expr       /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,varshash);}
                |  symbol                                                  {$$ = createVar($1);}
                |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,varshash);}
 			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,varshash);}
-               ;
-
+			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3),varshash);}
+               |  symbol arrayexpr /*fun cal*/                             {$$ = createFUNCALL(funshash,$1,$2,varshash);}
+               ;  
 %%
 
 int main(){	
