@@ -17,6 +17,7 @@ number      {digit}+
 fun         fun
 
 %%
+{ws}              { }
 "fun"             { debugmsg(LEX,"FUN");return FUNDEF;}
 "<"               { debugmsg(LEX,"<");return OPST;}
 "while"           { debugmsg(LEX,"WHILELOOP");return WHILELOOP;}

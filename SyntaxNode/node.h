@@ -41,6 +41,7 @@ typedef struct _Node{
 	struct _Node* right;
 	Data* data;
 	Hash* ptrlocalvars;
+	Hash* ptrglobalvars;
 	Hash* ptrfuncs;
 }Node;
 

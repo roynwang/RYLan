@@ -1,0 +1,12 @@
+fun test(var){
+	while(var<3){
+		print(var);
+		var = var+1;
+		test(var);
+	}
+} 
+fun main () {
+	i = 1;
+	test(i);
+	print (i);
+}

@@ -21,6 +21,9 @@
 #include "../debug.h"
 #include <stdio.h>
 
+
+Hash* curptrvarshash = NULL;
+
 char* optoStr(int op){
 	switch(op){
 		case ST:
@@ -29,9 +32,37 @@ char* optoStr(int op){
 			return "ADD";
 		default:
 			return "DEFAULT";
-
 	}
 }
+
+Hash* getcurhash(){
+	if(curptrvarshash == NULL){
+		curptrvarshash = (Hash*)malloc(sizeof(Hash*));
+		*curptrvarshash = NULL;
+	}
+	return curptrvarshash;
+}
+
+void resetcurhash(){
+	curptrvarshash = NULL;
+}
+
+Data* getbyName(char* name, Hash globalhash, Hash localhash){
+	Data* ret= getItem(localhash,name);
+	if(ret == NULL)
+		ret= getItem(globalhash,name);
+	return ret;
+}
+
+void setbyName(char* name, Data* value,Hash globalhash, Hash localhash){
+	Data* gitem = getItem(globalhash, name);
+	Data* litem = getItem(localhash, name);
+	if(litem == NULL && gitem!=NULL)
+		setItem(globalhash,name,value);
+	else
+		setItem(globalhash,name,value);
+}
+
 
 Node * createEmptyNode(){
 	Node* ret = (Node*)malloc(sizeof(Node));
@@ -39,7 +70,8 @@ Node * createEmptyNode(){
 	ret->op = NONE;
 	ret->left = NULL;
 	ret->right = NULL;
-	ret->ptrlocalvars = NULL;
+	ret->ptrglobalvars = NULL;
+	ret->ptrlocalvars = getcurhash();
 	ret->ptrfuncs = NULL;
 	ret->data = NULL;
 	return ret;
@@ -52,7 +84,7 @@ Data ExGET(Node* node){
 Data ExDISPLAY(Node* node){
 	debugmsg(EXECUTE, "DISPLAY ... ... %p", node);
 	Data var = Ex(node->right);
-	Data* intv = getItem(*(node->ptrlocalvars), var.value.varValue);
+	Data* intv = getItem(*(node->ptrglobalvars), var.value.varValue);
 	printf("!!!REUSLT = %d\n", intv->value.intValue); 
 }
 Data ExASSIGN(Node* node){
@@ -61,29 +93,29 @@ Data ExASSIGN(Node* node){
 	Data* dest = createEmptyData();
 	memcpy(dest, &src, sizeof(src));
 	debugmsg (EXECUTE, "ASSIGN: Name = %s value = %d", name, dest->value.intValue );
-	setItem(*(node->ptrlocalvars), name, (void*)dest);
+	setItem(*(node->ptrglobalvars), name, (void*)dest);
 	return TRUE;
 }
 Data ExADD(Node* node){
 	debugmsg(EXECUTE, "ADD ... ... %p", node);
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return adddata(*(node->ptrlocalvars), &l, &r);
+	return adddata(*(node->ptrglobalvars), &l, &r);
 }
 Data ExSUB(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return subdata(*(node->ptrlocalvars),&l,&r);
+	return subdata(*(node->ptrglobalvars),&l,&r);
 }
 Data ExMUL(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return muldata(*(node->ptrlocalvars),&l,&r);
+	return muldata(*(node->ptrglobalvars),&l,&r);
 }
 Data ExDIV(Node* node){
 	Data l = Ex(node->left);
 	Data r = Ex(node->right);
-	return divdata(*(node->ptrlocalvars),&l,&r);
+	return divdata(*(node->ptrglobalvars),&l,&r);
 }
 Data ExIF(Node* node){
 	Data l = Ex(node->left);
@@ -100,16 +132,16 @@ Data ExCompare(int comp, Node* node){
 		debugmsg(EXECUTE, "executing ST ... ...");
 		Data l = Ex(node->left);
 		Data r = Ex(node->right);
-		Data ret = comparedata(*(node->ptrlocalvars),&l,&r);
+		Data ret = comparedata(*(node->ptrglobalvars),&l,&r);
 		return  ret.value.intValue<0?TRUE : FALSE;
 	}
 }
 Data ExPARAMS(Node* node, ArrayUnit* actualParams){
 	//actual params should be array
 	Data *dup = createEmptyData();
-	Data * av = getValue(*(node->ptrlocalvars),actualParams->data);
+	Data * av = getValue(*(node->ptrglobalvars),actualParams->data);
 	memcpy(dup, av, sizeof(Data));
-	setItem(*(node->ptrlocalvars),node->data->value.strValue,dup);
+	setItem(*(node->ptrglobalvars),node->data->value.strValue,dup);
 	actualParams = actualParams->next;
 	if(node->right != NULL){
 		ExPARAMS(node->right, actualParams);
@@ -123,11 +155,32 @@ Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
 	debugmsg(EXECUTE,"executing FUN ... ... %p", node);
+
+	debugmsg(EXECUTE,"creating local vars ... ... ");
+	Hash tmp = initHash(65536);
+	*(node->ptrlocalvars) = tmp;
+
+	//query fun
+	Data* ptrfun = getItem(*(node->ptrfuncs), node->right->data->value.strValue);
+
+	Node* fun = (Node*)ptrfun->value.ptrValue;
+
+	debugmsg(EXECUTE,"queried fun ... ..%p", fun);
+	//done
+
+
 	if(node->left!=NULL){
 		Data params = ExGET(node->left);
-		ExPARAMS(node->right->left, params.value.arrayValue);
+		ExPARAMS(fun->left, params.value.arrayValue);
 	}
-	return Ex(node->right);
+
+	debugmsg(EXECUTE," executing fun ... ..%p", fun);
+	Data ret = Ex(fun);
+
+	debugmsg(EXECUTE,"freeing local vars ... ... ");
+	freeHash(tmp);
+	*(node->ptrlocalvars) = NULL;
+	return ret;
 }
 Data ExFUN(Node* node){
 	return Ex(node->right);
@@ -138,12 +191,15 @@ void freeNode(Node* node){
 		debugmsg(FREE,"free node ... ... %p", node);
 		freeNode(node->left);
 		freeNode(node->right);
-		if(node->ptrlocalvars!=NULL){
-			if(*(node->ptrlocalvars) != NULL)
+		if(node->ptrglobalvars!=NULL){
+			if(*(node->ptrglobalvars) != NULL)
 			{
-				freeHash(*(node->ptrlocalvars));
+				freeHash(*(node->ptrglobalvars));
 			}
-			*(node->ptrlocalvars) = NULL;
+			*(node->ptrglobalvars) = NULL;
+		}
+		if(node->op== FUN && node->ptrlocalvars!=NULL){
+			free(node->ptrlocalvars);
 		}
 		if(node->data!=NULL){
 			freeData(node->data);
@@ -187,54 +243,54 @@ Node* createPtr(void* value){
 	ret->data = createPtrData(value);
 	return ret;
 }
-Node* createDISPLAY(Node* value, Hash* ptrlocalvars){
+Node* createDISPLAY(Node* value, Hash* ptrglobalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  DISPLAY;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	ret->right = value;
 	return ret;
 }
 
-Node* createNOT(Node* expr, Hash * ptrlocalvars){
+Node* createNOT(Node* expr, Hash * ptrglobalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  NOT;
 	ret->left = expr;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	return ret;
 }
-Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars){
+Node* createIF(Node* expr, Node* thenstmt, Hash *ptrglobalvars){
 	Node* ret = createEmptyNode();
 	debugmsg(CREATE, "creating if ... ... %p", ret );
 	ret->op =  IF;
 	ret->left = expr;
 	ret->right = thenstmt;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	return ret;
 }
 
-Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrlocalvars){
+Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt, Hash *ptrglobalvars){
 	Node* ret = createEmptyNode();
 	ret->op =  IF;
-	ret->left = createNOT(createIF(expr, thenstmt,ptrlocalvars), ptrlocalvars);
+	ret->left = createNOT(createIF(expr, thenstmt,ptrglobalvars), ptrglobalvars);
 	ret->right = elsestmt;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	return ret;
 }
-Node* createComplex(int op, Node* left, Node* right, Hash* ptrlocalvars){
+Node* createComplex(int op, Node* left, Node* right, Hash* ptrglobalvars){
 	Node* ret = createEmptyNode();
 	debugmsg(CREATE, "creating expr ... ... %p (%s %p %p)",ret, optoStr(op), left,right);
 	ret->op =  op;
 	ret->left = left;
 	ret->right = right;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	return ret;
 }
 
-Node* createPARAM(char* name, Hash* ptrlocalvars){
+Node* createPARAM(char* name, Hash* ptrglobalvars){
 	Node* ret = createEmptyNode();
 	debugmsg (CREATE, "creating param ... ... %p %s", ret, name );
 	ret->op =  PARAMS;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	ret->data = createStrData(name);
 	return ret;
 }
@@ -244,59 +300,67 @@ Node* createPARAMS(Node* param, Node* params){
 	return param;
 }
 
-Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars){
+Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrglobalvars){
 	Node* ret = createEmptyNode();
 	debugmsg(CREATE,"creating stmts ... ...%p", ret);
 	ret->op =  STMT;
 	ret->left = stmt;
 	ret->right = stmts;
-	ret->ptrlocalvars = ptrlocalvars;
+	ret->ptrglobalvars = ptrglobalvars;
 	return ret;
 }
 
-Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars){
-	Node* stmts = createSTMTS(body, NULL,ptrlocalvars);
-	Node* ret= createIF(judge, stmts, ptrlocalvars);
-	ret->ptrlocalvars = ptrlocalvars;
+Node* createWHILE(Node* judge, Node* body, Hash *ptrglobalvars){
+	Node* stmts = createSTMTS(body, NULL,ptrglobalvars);
+	Node* ret= createIF(judge, stmts, ptrglobalvars);
+	ret->ptrglobalvars = ptrglobalvars;
 	stmts->right = ret;
 	return ret;
 }
 
-Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrlocalvars){
-	Node* whilestmt = createWHILE(judge, createSTMTS(body,step,ptrlocalvars),ptrlocalvars);
-	return createSTMTS(initial, whilestmt,ptrlocalvars);
+Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrglobalvars){
+	Node* whilestmt = createWHILE(judge, createSTMTS(body,step,ptrglobalvars),ptrglobalvars);
+	return createSTMTS(initial, whilestmt,ptrglobalvars);
 }
 
-Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash){
+Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrglobalvars, Hash *ptrfunhash){
 	Node* ret = createEmptyNode();
-	debugmsg(CREATE, "creating function ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrlocalvars );
+	debugmsg(CREATE, "creating function ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrglobalvars );
 	debugmsg(CREATE,"assing op ..." );
 	ret->op = FUN;
-	debugmsg(CREATE, "assign ptrlocalvars ..." );
-	ret->ptrlocalvars = ptrlocalvars;
+	debugmsg(CREATE, "assign ptrglobalvars ..." );
+	ret->ptrglobalvars = ptrglobalvars;
 	debugmsg(CREATE,"assign param ... ...%p", paramslist );
 	ret->left = paramslist;
 	debugmsg(CREATE,"assign stmts ..." );
 	ret->right = stmts;
 	debugmsg( CREATE,"done" );
 	ret->ptrfuncs = ptrfunhash;
+
+    //after finished a function node, rest the ptr to NULL
+	resetcurhash();
 	//register the function
 	debugmsg( CREATE,"register funcation '%s'", name );
 	Data* ptrfun = createPtrData(ret);
 	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;
 }
-Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrlocalvars){
+Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrglobalvars){
 	Node* ret = createEmptyNode();
 	ret->op = FUNCALL;
 	ret->left = paramslist;
-//	ret->left = createArray(paramslist);
 
-	Data* ptrfun = getItem(*funHash, name);
-	Node* fun = (Node*)ptrfun->value.ptrValue;
-	
-	ret->right = fun;
-	ret->ptrlocalvars = ptrlocalvars;
+    //before modify
+//	Data* ptrfun = getItem(*funHash, name);
+//	Node* fun = (Node*)ptrfun->value.ptrValue;
+//	
+//	ret->right = fun;
+	//after modify
+	ret->right = createStr(name);
+
+
+	//////////done///
+	ret->ptrglobalvars = ptrglobalvars;
 	ret->ptrfuncs = funHash;
 	return ret;
 }
