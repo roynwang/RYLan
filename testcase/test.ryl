@@ -1,11 +1,13 @@
-fun test (var){
-	while(var<10){
+fun test (var,var2){
+	while(var<10000){
+		var2 = var2+var;
 		var=1 + var;
 	}
-	print(var);
+	return var2;
 } 
 fun main () {
 	i = 1;
-	test(i);
+	j = 0;
+	i = test(i,j);
 	print (i);
 }

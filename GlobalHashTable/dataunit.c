@@ -138,6 +138,8 @@ Data* createEmptyData(){
 char* toString(Data* data){
 	if(data == NULL) return "NULL";
 	switch(data->valueType){
+		case VarType:
+			return "Var";
 		case ArrayType:
 			return "Array";
 		case StrType:
@@ -155,6 +157,7 @@ char* toString(Data* data){
 		default:
 			break;
 	}
+	return "ERROR";
 }
 Data* createVarData(char* name){
 	Data* ret = createEmptyData();

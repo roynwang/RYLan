@@ -32,7 +32,8 @@ typedef enum {
 	PARAMS,
 	FUN,
 	FUNCALL,
-	DISPLAY
+	DISPLAY,
+	RET
 }OpEnum;
 typedef struct _Node{
 	int op;
@@ -63,6 +64,7 @@ Node* createDISPLAY(Node* value, Hash* ptrlocalvars);
 Node* createEXPR(Node* node, Hash* ptrlocalvars);
 Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars);
 Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrlocalvars);
+Node* createRET(Node* value, Hash* ptrglobalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
 

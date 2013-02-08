@@ -18,6 +18,7 @@ fun         fun
 
 %%
 {ws}              { }
+"return"          { debugmsg(LEX,"RETURN"); return RETURN;}
 "fun"             { debugmsg(LEX,"FUN");return FUNDEF;}
 "<"               { debugmsg(LEX,"<");return OPST;}
 "while"           { debugmsg(LEX,"WHILELOOP");return WHILELOOP;}

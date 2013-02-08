@@ -21,13 +21,12 @@ Node* mainfunc = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP
-
+%token SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN
 %right TOKENASSIGN    /*less priority than calculate OP*/ 
 %left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt
 %type  <arrelem> arrayelement arrayelements
 %%
 prog           :  fundefs                                                  {}
@@ -59,14 +58,17 @@ stmts          :  stmt stmts                                              {$$ = 
 			   ;
 
 stmt		   :  expr SEMC                                               {$$ = $1;}
+               |  returnstmt                                              {$$ = $1;}
                |  whileloop                                               {$$ = $1;}
 
 			   |  forstmt                                                 {$$ = $1;}
 			   ;
+returnstmt     :  RETURN expr SEMC                                        {$$ = createRET($2,varshash);}
+
 whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
                ;
 
-forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock       {$$ = createFOR($3, $5, $7, $9, varshash);}
+forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock      {$$ = createFOR($3, $5, $7, $9, varshash);}
                ;
 
 arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}

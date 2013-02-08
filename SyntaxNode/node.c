@@ -78,7 +78,7 @@ Node * createEmptyNode(){
 }
 
 Data ExGET(Node* node){
-	debugmsg(EXECUTE, "GET ... ... %p", node);
+	debugmsg(EXECUTE, "GET ... ... %p %s", node, toString(node->data));
 	return *(node->data);
 }
 Data ExDISPLAY(Node* node){
@@ -86,6 +86,7 @@ Data ExDISPLAY(Node* node){
 	Data var = Ex(node->right);
 	Data* intv = getItem(*(node->ptrglobalvars), var.value.varValue);
 	printf("!!!REUSLT = %d\n", intv->value.intValue); 
+	return EMPTY;
 }
 Data ExASSIGN(Node* node){
 	const char* name = Ex(node->left).value.varValue;
@@ -146,19 +147,22 @@ Data ExPARAMS(Node* node, ArrayUnit* actualParams){
 	if(node->right != NULL){
 		ExPARAMS(node->right, actualParams);
 	}
+	return TRUE;
 }
 Data ExSTMT(Node* node){
-	Ex(node->left);
-	Ex(node->right);
+	Data left = Ex(node->left);
+	Data right = Ex(node->right);
+	return right.valueType == EMPTY.valueType  ? left : right;
 }
 Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
 	debugmsg(EXECUTE,"executing FUN ... ... %p", node);
 
-	debugmsg(EXECUTE,"creating local vars ... ... ");
-	Hash tmp = initHash(65536);
-	*(node->ptrlocalvars) = tmp;
+//	Hash tmp = initHash(65536);
+//	*(node->ptrlocalvars) = tmp;
+//
+//	debugmsg(EXECUTE,"creating local vars ... ... %p = %p ", node->ptrlocalvars, tmp);
 
 	//query fun
 	Data* ptrfun = getItem(*(node->ptrfuncs), node->right->data->value.strValue);
@@ -166,6 +170,11 @@ Data ExFUNCALL(Node* node){
 	Node* fun = (Node*)ptrfun->value.ptrValue;
 
 	debugmsg(EXECUTE,"queried fun ... ..%p", fun);
+	Hash tmp = initHash(65536);
+	*(fun->ptrlocalvars) = tmp;
+	debugmsg(EXECUTE,"creating local vars ... ... %p = %p ", fun->ptrlocalvars, tmp);
+
+
 	//done
 
 
@@ -174,9 +183,9 @@ Data ExFUNCALL(Node* node){
 		ExPARAMS(fun->left, params.value.arrayValue);
 	}
 
-	debugmsg(EXECUTE," executing fun ... ..%p", fun);
+	debugmsg(EXECUTE,"executing fun ... ..%p", fun);
 	Data ret = Ex(fun);
-
+	debugmsg(EXECUTE,"return ... ...%s", toString(&ret));
 	debugmsg(EXECUTE,"freeing local vars ... ... ");
 	freeHash(tmp);
 	*(node->ptrlocalvars) = NULL;
@@ -184,6 +193,16 @@ Data ExFUNCALL(Node* node){
 }
 Data ExFUN(Node* node){
 	return Ex(node->right);
+}
+Data ExRET(Node* node){
+	debugmsg(EXECUTE, "executing RET ... ... %p", node);
+	Data ret = Ex(node->left);
+	if(ret.valueType == VarType){
+		Data* tmp = getbyName(ret.value.varValue, *(node->ptrglobalvars), *(node->ptrlocalvars));
+		memcpy(&ret, tmp, sizeof(Data));
+	}
+	debugmsg(EXECUTE, "return ... ... %s", toString(&ret));
+	return ret;
 }
 void freeNode(Node* node){
 	if(node!=NULL && node->ismarkedforfree == 0){
@@ -248,6 +267,14 @@ Node* createDISPLAY(Node* value, Hash* ptrglobalvars){
 	ret->op =  DISPLAY;
 	ret->ptrglobalvars = ptrglobalvars;
 	ret->right = value;
+	return ret;
+}
+Node* createRET(Node* value, Hash* ptrglobalvars){
+	Node* ret = createEmptyNode();
+	debugmsg(CREATE,"create RET ... ... %p %p",ret, ret->ptrlocalvars);
+	ret->op = RET;
+	ret->ptrglobalvars = ptrglobalvars;
+	ret->left = value;
 	return ret;
 }
 
@@ -392,6 +419,8 @@ Data Ex(Node* node){
 			return ExFUN(node);
 		case DISPLAY:
 			return ExDISPLAY(node);
+		case RET:
+			return ExRET(node);
 		default:
 			break;   
 	}
