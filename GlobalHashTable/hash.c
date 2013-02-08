@@ -41,6 +41,19 @@ Hash initHash(size_t size){
 	}
 	return ret;
 }
+Hash dupHash(Hash hash){
+    debugmsg(DATASTRUCTURE, "duplicate Hash table ... ...");
+	Hash ret = (Hash)malloc(sizeof(structHash));
+	ret->size = hash->size;
+	ret->table = (void**)malloc(sizeof(void*)*hash->size);
+	unsigned int tmp = hash->size;
+	while(tmp>0){
+		tmp--;
+		ret->table[tmp] = hash->table[tmp];
+	}
+	return ret;
+
+}
 void freeHash(Hash hash){
     debugmsg(FREE, "free Hash table ... ...");
 	if(hash == NULL) return;

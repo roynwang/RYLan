@@ -4,6 +4,7 @@ LEX = flex
 PARSER = parser
 HASH = GlobalHashTable
 SYNTAX = SyntaxNode
+OO = OONode
 TEST = Test
 DEBUG =  -g
 
@@ -32,6 +33,8 @@ node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c
 debug.o: debug.h debug.c
 	$(CC) -c debug.h debug.c $(DEBUG)
 
+oosupport: $(OO)/objectnode.h $(OO)/classnode.h $(OO)/objectnode.c
+	$(CC) -c $(OO)/objectnode.h $(OO)/classnode.h $(OO)/objectnode.c
 
 clean:
 	rm *.o lex.yy.c y.tab.c *~ $(PARSER) StructureTest
