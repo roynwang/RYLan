@@ -19,6 +19,7 @@
 #include <memory.h>
 #include "node.h"
 #include "../debug.h"
+#include "../GC/gc.h"
 #include <stdio.h>
 
 
@@ -74,6 +75,7 @@ Node * createEmptyNode(){
 	ret->ptrlocalvars = getcurhash();
 	ret->ptrfuncs = NULL;
 	ret->data = NULL;
+	addres(NODETYPE, ret);
 	return ret;
 }
 
@@ -192,7 +194,10 @@ Data ExFUNCALL(Node* node){
 	return ret;
 }
 Data ExFUN(Node* node){
-	return Ex(node->right);
+	debugmsg(EXECUTE, "executing FUN ... ... %p", node);
+	Data ret = Ex(node->right);
+	debugmsg(EXECUTE, "FUN  return ... ... %s", toString(&ret));
+	return ret;
 }
 Data ExRET(Node* node){
 	debugmsg(EXECUTE, "executing RET ... ... %p", node);
@@ -205,26 +210,11 @@ Data ExRET(Node* node){
 	return ret;
 }
 void freeNode(Node* node){
-	if(node!=NULL && node->ismarkedforfree == 0){
-		node->ismarkedforfree = 1;
-		debugmsg(FREE,"free node ... ... %p", node);
-		freeNode(node->left);
-		freeNode(node->right);
-		if(node->ptrglobalvars!=NULL){
-			if(*(node->ptrglobalvars) != NULL)
-			{
-				freeHash(*(node->ptrglobalvars));
-			}
-			*(node->ptrglobalvars) = NULL;
-		}
-		if(node->op== FUN && node->ptrlocalvars!=NULL){
-			free(node->ptrlocalvars);
-		}
-		if(node->data!=NULL){
-			freeData(node->data);
-		}
-		free(node);
+    debugmsg(FREE, "free node ... ... %p", node);
+	if(node->op == FUN){
+		free(node->ptrlocalvars);
 	}
+	free(node);
 }
 
 Node* createVar(char* name){
@@ -352,7 +342,7 @@ Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrglo
 
 Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrglobalvars, Hash *ptrfunhash){
 	Node* ret = createEmptyNode();
-	debugmsg(CREATE, "creating function ... ... param = %p stmts = %p varstable = %p",paramslist, stmts, ptrglobalvars );
+	debugmsg(CREATE, "creating function ... ... %p param = %p stmts = %p varstable = %p", ret, paramslist, stmts, ptrglobalvars );
 	debugmsg(CREATE,"assing op ..." );
 	ret->op = FUN;
 	debugmsg(CREATE, "assign ptrglobalvars ..." );
@@ -367,9 +357,9 @@ Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrglobalvars, 
     //after finished a function node, rest the ptr to NULL
 	resetcurhash();
 	//register the function
-	debugmsg( CREATE,"register function '%s'", name );
-	Data* ptrfun = createPtrData(ret);
-	setItem(*ptrfunhash, name, ptrfun); 
+//	debugmsg( CREATE,"register function '%s'", name );
+//	Data* ptrfun = createPtrData(ret);
+//	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;
 }
 Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrglobalvars){
@@ -394,6 +384,7 @@ Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrglobal
 
 Data Ex(Node* node){
 	if(node == NULL) return EMPTY;
+	debugmsg(EXECUTE, "Executing %p left:%p right:%p", node, node->left, node->right);
 	switch(node->op){
 		case GET:
 			return ExGET(node);
@@ -422,8 +413,9 @@ Data Ex(Node* node){
 		case RET:
 			return ExRET(node);
 		default:
-			break;   
+			return EMPTY;   
 	}
+	return EMPTY;
 }
 
 

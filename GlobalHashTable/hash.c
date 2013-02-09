@@ -19,6 +19,7 @@
 #include <string.h>
 #include "hash.h"
 #include "../debug.h"
+#include "../GC/gc.h"
 
 size_t getBKDRHash(const char* input, size_t hashsize){
 	size_t hash = 0;
@@ -35,6 +36,7 @@ Hash initHash(size_t size){
 	Hash ret = (Hash)malloc(sizeof(structHash));
 	ret->size = size;
 	ret->table = (void**)malloc(sizeof(void*)*size);
+	addres(HASHTYPE, ret);
 	unsigned int tmp = size;
 	while(tmp>0){
 		ret->table[--tmp] = NULL;
@@ -59,12 +61,6 @@ void freeHash(Hash hash){
 	if(hash == NULL) return;
 	//need to free all items
 	if(hash->table != NULL){
-		unsigned int tmp = hash->size;
-		while(tmp>0){
-			tmp --;
-			if(hash->table[tmp]!=NULL)
-				freeData(hash->table[tmp]);
-		}
 		free(hash->table);
 		hash->table = NULL;
 	}

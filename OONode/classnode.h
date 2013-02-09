@@ -34,4 +34,6 @@ ClassNode* createClassNode(ClassNode* parent);
 void registerclass(const char* name ,Hash classtable, ClassNode *class);
 void registervar(const char* name, Data* value, ClassNode* class);
 void registerfun(const char* name, Node* fun, ClassNode* class);
+
+Node* getfunmember(const char* name, ClassNode* class);
 #endif   /* ----- #ifndef CLASSNODE_INC  ----- */

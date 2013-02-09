@@ -7,6 +7,7 @@
 #include "GlobalHashTable/hash.h"
 #include "OONode/classnode.h"
 #include "debug.h"
+#include "GC/gc.h"
 #define MAIN "main"
 void  yyerror(char*s);
 void* cur = NULL;
@@ -38,7 +39,7 @@ classdef       :  DEF CLASS symbol classbody                               {regi
                ;
 classbody      :  BLOCKSTART classelements BLOCKEND                        {}
                ;
-classelements  :  classelement classelements                               {/*nothing*/}
+classelements  :  classelements classelement                               {/*nothing*/}
 			   |  classelement                                             {/*nothing*/}
 			   ;
 
@@ -48,7 +49,8 @@ classelement   :  fundef                                                   {}
 vardef         :  DEF symbol SEMC                                          { registervar($2, &EMPTY,curclass);  }
 			   ;
 			   
-fundef         :  DEF symbol LP params RP stmtsblock                       {createFUN($2,$4,$6, curclass->vartable,curclass->funtable);
+fundef         :  DEF symbol LP params RP stmtsblock                       { $$ = createFUN($2,$4,$6, curclass->vartable,curclass->funtable);
+  registerfun($2,$$, curclass);
 }
                ;
 
@@ -102,7 +104,10 @@ expr           :  intvalue                                                {$$ = 
 %%
 
 int main(){	
-	mtrace();
+    mtrace();
+
+	initialGC();
+
 	Hash classhash = initHash(HASHSIZE);
 	ptrclasstable = &classhash;
 	curclass = createClassNode(NULL);
@@ -110,10 +115,14 @@ int main(){
 	//create node of print function
 	yyparse();
 	printf("---------------------MAIN--------------------\n");
+	ClassNode* mainclass = getItem(classhash,"MAIN");
+	printf("mainclass  = %p \n", mainclass);
+	Node* mainfun = getfunmember("main", mainclass);
+	Data t = Ex(mainfun);
 	printf("---------------------DONE--------------------\n");
-	if(mainfunc!=NULL){
-		freeNode(mainfunc);
-	}
+
+    finializeMem();
+
 	yy_delete_buffer(YY_CURRENT_BUFFER);
 	yy_init = 1;
 	return 0;

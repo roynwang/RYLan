@@ -6,10 +6,12 @@ HASH = GlobalHashTable
 SYNTAX = SyntaxNode
 OO = OONode
 TEST = Test
+GC = GC
 DEBUG =  -g
 
-prog: lex.yy.c node.o hash.o dataunit.o debug.o classnode.o oosupport
-	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o classnode.o -o $(PARSER) $(DEBUG)
+
+prog: lex.yy.c node.o hash.o dataunit.o debug.o classnode.o oosupport gc.o
+	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o classnode.o gc.o -o $(PARSER) $(DEBUG)
 
 lex.yy.c: ryt.l y.tab.c debug.h
 	$(LEX) ryt.l
@@ -39,6 +41,8 @@ oosupport: $(OO)/classnode.h $(OO)/objectnode.h $(OO)/objectnode.c
 classnode.o: debug.h $(OO)/classnode.h $(OO)/classnode.c 
 	$(CC) -c $(OO)/classnode.h $(OO)/classnode.c 
 
+gc.o: $(GC)/gc.h $(GC)/gc.c
+	$(CC) -c $(GC)/gc.h $(GC)/gc.c
 
 clean:
 	rm *.o lex.yy.c y.tab.c *~ $(PARSER) StructureTest

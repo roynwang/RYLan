@@ -3,3 +3,10 @@ def class testclass{
 	def b;
 	def testfun(c,d){return 0;}
 }
+
+def class MAIN{
+	def main(){
+		a = 1;
+		print(a);
+	}
+}
