@@ -1,0 +1,5 @@
+def class testclass{
+	def a;
+	def b;
+	def testfun(c,d){return 0;}
+}

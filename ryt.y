@@ -5,15 +5,15 @@
 #include <unistd.h>
 #include "SyntaxNode/node.h"
 #include "GlobalHashTable/hash.h"
+#include "OONode/classnode.h"
 #include "debug.h"
 #define MAIN "main"
 void  yyerror(char*s);
 void* cur = NULL;
 char* curFun = NULL;
-Hash* varshash = NULL;
-Hash* funshash = NULL;
-Node* funnode = NULL;
+Hash* ptrclasstable = NULL;
 Node* mainfunc = NULL;
+ClassNode* curclass = NULL;
 %}
 %union {
 	char* str;
@@ -21,23 +21,34 @@ Node* mainfunc = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token SEMC FUNDEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN
+%token SEMC DEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN CLASS
 %right TOKENASSIGN    /*less priority than calculate OP*/ 
 %left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt classdefs classdef classbody classelements classelement vardef
 %type  <arrelem> arrayelement arrayelements
 %%
-prog           :  fundefs                                                  {}
+scope          :  classdefs                                                {}
                ;
-fundefs        :  fundefs fundef                                           {}
-               |  fundef                                                   {}
+classdefs      :  classdefs classdef                                       {}
+               |  classdef                                                 {}
+			   ;
+classdef       :  DEF CLASS symbol classbody                               {registerclass($3,*ptrclasstable,curclass); curclass = createClassNode(NULL);}
+               ;
+classbody      :  BLOCKSTART classelements BLOCKEND                        {}
+               ;
+classelements  :  classelement classelements                               {/*nothing*/}
+			   |  classelement                                             {/*nothing*/}
 			   ;
 
-fundef         :  FUNDEF symbol LP params RP stmtsblock                   {$$ = createFUN($2,$4,$6,varshash,funshash);
-if(strcmp(MAIN,$2)==0) mainfunc = $$;
-else funnode = $$;
+classelement   :  fundef                                                   {}
+               |  vardef                                                   {/*register the var*/}
+			   ;
+vardef         :  DEF symbol SEMC                                          { registervar($2, &EMPTY,curclass);  }
+			   ;
+			   
+fundef         :  DEF symbol LP params RP stmtsblock                       {createFUN($2,$4,$6, curclass->vartable,curclass->funtable);
 }
                ;
 
@@ -46,15 +57,15 @@ params         :  param  COMMA params                                     {$$ = 
 			   |                                                          {$$ = NULL;}
                ;
 
-param          :  symbol                                                  {$$ = createPARAM($1,varshash);}
+param          :  symbol                                                  {$$ = createPARAM($1,curclass->vartable);}
                ;
 
 stmtsblock     :  BLOCKSTART stmts BLOCKEND                               {$$ = $2;}
                |  stmt                                                    {$$ = $1;}
                ;
 
-stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,varshash);}
-               |  stmt                                                    {$$ = createSTMTS($1,NULL,varshash);}
+stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,curclass->vartable);}
+               |  stmt                                                    {$$ = createSTMTS($1,NULL, curclass->vartable);}
 			   ;
 
 stmt		   :  expr SEMC                                               {$$ = $1;}
@@ -63,12 +74,12 @@ stmt		   :  expr SEMC                                               {$$ = $1;}
 
 			   |  forstmt                                                 {$$ = $1;}
 			   ;
-returnstmt     :  RETURN expr SEMC                                        {$$ = createRET($2,varshash);}
+returnstmt     :  RETURN expr SEMC                                        {$$ = createRET($2,curclass->vartable);}
 
-whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,varshash);}
+whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,curclass->vartable);}
                ;
 
-forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock      {$$ = createFOR($3, $5, $7, $9, varshash);}
+forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock      {$$ = createFOR($3, $5, $7, $9, curclass->vartable);}
                ;
 
 arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}
@@ -81,47 +92,33 @@ arrayelement   :  symbol                                                  {Data*
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
 expr           :  intvalue                                                {$$ = createInt($1);} 
-			   |  symbol TOKENASSIGN expr       /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,varshash);}
+			   |  symbol TOKENASSIGN expr       /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,curclass->vartable);}
                |  symbol                                                  {$$ = createVar($1);}
-               |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,varshash);}
-			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,varshash);}
-			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3),varshash);}
-               |  symbol arrayexpr /*fun cal*/                             {$$ = createFUNCALL(funshash,$1,$2,varshash);}
+               |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,curclass->vartable);}
+			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,curclass->vartable);}
+			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3),curclass->vartable);}
+               |  symbol arrayexpr /*fun cal*/                             {$$ = createFUNCALL(curclass->funtable,$1,$2,curclass->vartable);}
                ;  
 %%
 
 int main(){	
 	mtrace();
+	Hash classhash = initHash(HASHSIZE);
+	ptrclasstable = &classhash;
+	curclass = createClassNode(NULL);
     debugmsg(YACC, "START YACC ... ...");
-	varshash = (Hash*)malloc(sizeof(Hash*));
-	funshash = (Hash*)malloc(sizeof(Hash*));
 	//create node of print function
-	*varshash = initHash(65536);
-	*funshash  = initHash(65536);
-	debugmsg(YACC,"global vars = %p funcs = %p", varshash, funshash);
-    printf("YACC started\n");
 	yyparse();
 	printf("---------------------MAIN--------------------\n");
-	Ex(mainfunc);
 	printf("---------------------DONE--------------------\n");
-	freeNode(funnode);
 	if(mainfunc!=NULL){
 		freeNode(mainfunc);
 	}
-	freeHash(*varshash);
-	freeHash(*funshash);
-	free(varshash);
-	free(funshash);
 	yy_delete_buffer(YY_CURRENT_BUFFER);
 	yy_init = 1;
 	return 0;
 }
 void yyerror(char *s) { 
 	fprintf(stdout, "%s\n", s); 
-	freeNode(funnode);
-	freeHash(*varshash);
-	freeHash(*funshash);
-	free(varshash);
-	free(funshash);
 }
 

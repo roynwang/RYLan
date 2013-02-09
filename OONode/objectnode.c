@@ -19,6 +19,7 @@
 #include <memory.h>
 #include "objectnode.h"
 
+
 ObjectNode* createEmptyObjectNode(){
 	ObjectNode* ret = (ObjectNode*)malloc(sizeof(ObjectNode));
 	ret->vartable = NULL;

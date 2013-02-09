@@ -18,7 +18,7 @@
 
 #ifndef  DEBUG_INC
 #define  DEBUG_INC
-#define DEBUGLEVEL 0
+#define DEBUGLEVEL 63
 //#define DEBUGLEVEL 0
 
 #include <stdarg.h>

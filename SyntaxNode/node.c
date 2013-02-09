@@ -367,7 +367,7 @@ Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrglobalvars, 
     //after finished a function node, rest the ptr to NULL
 	resetcurhash();
 	//register the function
-	debugmsg( CREATE,"register funcation '%s'", name );
+	debugmsg( CREATE,"register function '%s'", name );
 	Data* ptrfun = createPtrData(ret);
 	setItem(*ptrfunhash, name, ptrfun); 
 	return ret;

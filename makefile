@@ -8,8 +8,8 @@ OO = OONode
 TEST = Test
 DEBUG =  -g
 
-prog: lex.yy.c node.o hash.o dataunit.o debug.o
-	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o -o $(PARSER) $(DEBUG)
+prog: lex.yy.c node.o hash.o dataunit.o debug.o classnode.o oosupport
+	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o classnode.o -o $(PARSER) $(DEBUG)
 
 lex.yy.c: ryt.l y.tab.c debug.h
 	$(LEX) ryt.l
@@ -33,8 +33,12 @@ node.o: $(SYNTAX)/node.h $(SYNTAX)/node.c
 debug.o: debug.h debug.c
 	$(CC) -c debug.h debug.c $(DEBUG)
 
-oosupport: $(OO)/objectnode.h $(OO)/classnode.h $(OO)/objectnode.c
-	$(CC) -c $(OO)/objectnode.h $(OO)/classnode.h $(OO)/objectnode.c
+oosupport: $(OO)/classnode.h $(OO)/objectnode.h $(OO)/objectnode.c
+	$(CC) -c $(OO)/classnode.h $(OO)/objectnode.h $(OO)/objectnode.c
+
+classnode.o: debug.h $(OO)/classnode.h $(OO)/classnode.c 
+	$(CC) -c $(OO)/classnode.h $(OO)/classnode.c 
+
 
 clean:
 	rm *.o lex.yy.c y.tab.c *~ $(PARSER) StructureTest
