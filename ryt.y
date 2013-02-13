@@ -8,13 +8,13 @@
 #include "OONode/classnode.h"
 #include "debug.h"
 #include "GC/gc.h"
+#include "globdef.h"
 #define MAIN "main"
 void  yyerror(char*s);
-void* cur = NULL;
-char* curFun = NULL;
-Hash* ptrclasstable = NULL;
-Node* mainfunc = NULL;
-ClassNode* curclass = NULL;
+//curFun = NULL;
+//ptrclasstable = NULL;
+//mainfunc = NULL;
+//curclass = NULL;
 %}
 %union {
 	char* str;
@@ -22,12 +22,12 @@ ClassNode* curclass = NULL;
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token SEMC DEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN CLASS
+%token SEMC DEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN CLASS DOT
 %right TOKENASSIGN    /*less priority than calculate OP*/ 
 %left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt classdefs classdef classbody classelements classelement vardef
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt classdefs classdef classbody classelements classelement vardef simpleexpr objvar objcall
 %type  <arrelem> arrayelement arrayelements
 %%
 scope          :  classdefs                                                {}
@@ -39,8 +39,7 @@ classdef       :  DEF CLASS symbol classbody                               {regi
                ;
 classbody      :  BLOCKSTART classelements BLOCKEND                        {}
                ;
-classelements  :  classelements classelement                               {/*nothing*/}
-			   |  classelement                                             {/*nothing*/}
+classelements  :  classelements classelement                               {/*nothing*/} |  classelement                                             {/*nothing*/}
 			   ;
 
 classelement   :  fundef                                                   {}
@@ -71,6 +70,7 @@ stmts          :  stmt stmts                                              {$$ = 
 			   ;
 
 stmt		   :  expr SEMC                                               {$$ = $1;}
+               |  objcall SEMC                                            {$$ = $1;}
                |  returnstmt                                              {$$ = $1;}
                |  whileloop                                               {$$ = $1;}
 
@@ -88,19 +88,28 @@ arrayexpr      :  LP arrayelements RP                                     {$$ = 
                ;
 arrayelements  :  arrayelement COMMA arrayelements                        {$1->next = $3; $$ = $1;}
                |  arrayelement                                            {$$ = $1;}
-			   |                                                          {$$ = NULL;}
+			   |                                                          {$$ = NULL; printf("!!!!!!!!!EMPTY ARRAY!!!!!!!!!!\n");}
 			   ;
 arrayelement   :  symbol                                                  {Data* tmp = createVarData($1);$$ = createArrayUnit(tmp);}
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
-expr           :  intvalue                                                {$$ = createInt($1);} 
+expr           :  simpleexpr                                              {$$ = $1;} 
+               |  objvar                                                  {$$ = $1;}
+               |  objcall                                                 {$$ = $1;  /*cause conflicts!!!!!!!!!!!*/}
 			   |  symbol TOKENASSIGN expr       /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,curclass->vartable);}
                |  symbol                                                  {$$ = createVar($1);}
                |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,curclass->vartable);}
 			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,curclass->vartable);}
 			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3),curclass->vartable);}
-               |  symbol arrayexpr /*fun cal*/                             {$$ = createFUNCALL(curclass->funtable,$1,$2,curclass->vartable);}
+               |  symbol arrayexpr /*fun cal*/                            {$$ = createFUNCALL(curclass->funtable,$1,$2,curclass->vartable);}
                ;  
+simpleexpr     :  intvalue                                                {$$ = createInt($1);}
+               |  strvalue                                                {$$ = createStr($1);} 
+			   ;
+objvar         :  symbol DOT symbol                                       {$$ = createOBJVAR($1,$3,curclass->vartable);}
+			   ;
+objcall        :  symbol DOT symbol arrayexpr                             {$$ = createOBJFUN($1,$3,$4,curclass->vartable);}
+
 %%
 
 int main(){	
@@ -111,13 +120,16 @@ int main(){
 	Hash classhash = initHash(HASHSIZE);
 	ptrclasstable = &classhash;
 	curclass = createClassNode(NULL);
+
     debugmsg(YACC, "START YACC ... ...");
 	//create node of print function
 	yyparse();
 	printf("---------------------MAIN--------------------\n");
 	ClassNode* mainclass = getItem(classhash,"MAIN");
 	printf("mainclass  = %p \n", mainclass);
+    printf("ptrclasstable ... ... %p\n", ptrclasstable);
 	Node* mainfun = getfunmember("main", mainclass);
+	setClassHash(ptrclasstable);
 	Data t = Ex(mainfun);
 	printf("---------------------DONE--------------------\n");
 
@@ -129,5 +141,8 @@ int main(){
 }
 void yyerror(char *s) { 
 	fprintf(stdout, "%s\n", s); 
+	printf("finialize syntax tree ... ...");
+    finializeMem();
+	printf("done\n");
 }
 

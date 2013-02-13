@@ -68,8 +68,10 @@ void freeHash(Hash hash){
 }
 
 void setItem(Hash hash, const char* name, void* value){
+
 	void* v = hash->table[getBKDRHash(name,hash->size)];
-	if(v !=NULL)
+    debugmsg(EXECUTE, "Hash: %p set %s: %p -> %p", hash, name,v, value);
+	if(v !=NULL && v!=&EMPTY)
 		free(v);
 	hash->table[getBKDRHash(name,hash->size)] = value;
 }

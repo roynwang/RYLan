@@ -36,3 +36,9 @@ ObjectNode* createObject(char* classname, Hash classtable){
 	ret->vartable = ptrhash;
 	return ret;
 }
+
+
+
+
+
+

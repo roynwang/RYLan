@@ -1,11 +1,16 @@
-def class testclass{
-	def a;
-	def b;
-	def testfun(c,d){return 0;}
+def class TEST{
+	def a ;
+	def new (){
+		a = 1111;
+		print(a);
+	}
+	def geta(){
+		return a;
+	}
 }
-
 def class MAIN{
 	def main(){
+		obj = TEST.new();
 		a = 1;
 		print(a);
 	}

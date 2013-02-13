@@ -33,7 +33,10 @@ typedef enum {
 	FUN,
 	FUNCALL,
 	DISPLAY,
-	RET
+	RET,
+	OBJVAR,
+	FUNNAME,
+	OBJFUN
 }OpEnum;
 typedef struct _Node{
 	int op;
@@ -65,7 +68,11 @@ Node* createEXPR(Node* node, Hash* ptrlocalvars);
 Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars);
 Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrlocalvars);
 Node* createRET(Node* value, Hash* ptrglobalvars);
+Node* createOBJVAR(char* objname, char* varname, Hash* ptrglobalvars);
+Node* createOBJFUN(char* objname, char* funname, Node* paramslist, Hash* ptrglobalvars);
 
 Data ExPARAMS(Node* node, ArrayUnit* actualParams);
+
+void setClassHash(Hash* classhash);
 
 #endif   /* ----- #ifndef NODE_INC  ----- */

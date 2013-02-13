@@ -20,10 +20,13 @@
 #include "node.h"
 #include "../debug.h"
 #include "../GC/gc.h"
+#include "../OONode/classnode.h"
+#include "../OONode/objectnode.h"
 #include <stdio.h>
 
 
 Hash* curptrvarshash = NULL;
+Hash* ptrclasstable = NULL;
 
 char* optoStr(int op){
 	switch(op){
@@ -97,6 +100,7 @@ Data ExASSIGN(Node* node){
 	memcpy(dest, &src, sizeof(src));
 	debugmsg (EXECUTE, "ASSIGN: Name = %s value = %d", name, dest->value.intValue );
 	setItem(*(node->ptrglobalvars), name, (void*)dest);
+	debugmsg (EXECUTE,"ASSIGN DONE");
 	return TRUE;
 }
 Data ExADD(Node* node){
@@ -159,27 +163,15 @@ Data ExSTMT(Node* node){
 Data ExFUNCALL(Node* node){
 	//set param
 	//create new local vars
-	debugmsg(EXECUTE,"executing FUN ... ... %p", node);
-
-//	Hash tmp = initHash(65536);
-//	*(node->ptrlocalvars) = tmp;
-//
-//	debugmsg(EXECUTE,"creating local vars ... ... %p = %p ", node->ptrlocalvars, tmp);
-
+	debugmsg(EXECUTE,"executing FUN ... ... %p left = %p right = %p", node, node->left, node->right, node->left, node->right);
 	//query fun
 	Data* ptrfun = getItem(*(node->ptrfuncs), node->right->data->value.strValue);
 
 	Node* fun = (Node*)ptrfun->value.ptrValue;
-
 	debugmsg(EXECUTE,"queried fun ... ..%p", fun);
 	Hash tmp = initHash(65536);
 	*(fun->ptrlocalvars) = tmp;
 	debugmsg(EXECUTE,"creating local vars ... ... %p = %p ", fun->ptrlocalvars, tmp);
-
-
-	//done
-
-
 	if(node->left!=NULL){
 		Data params = ExGET(node->left);
 		ExPARAMS(fun->left, params.value.arrayValue);
@@ -209,6 +201,65 @@ Data ExRET(Node* node){
 	debugmsg(EXECUTE, "return ... ... %s", toString(&ret));
 	return ret;
 }
+Node* getConstructor(char* classname, Hash* classhash){
+
+	debugmsg(EXECUTE, "Query constructor from %p... ... %s", classhash,classname);
+	ClassNode* class = getItem(*classhash,classname);
+	debugmsg(EXECUTE, "Queried class ... ... %p", class);
+	Node* fun = getfunmember("new", class);
+	return fun;
+
+}
+
+Data ExOBJFUN(Node* node){
+	
+	debugmsg(EXECUTE, "executing OBJFUN ... ... %p left = %p right = %p", node, node->left, node->right);
+	Node* funexp = node->right;
+	debugmsg(EXECUTE, "get OBJFUN info ... ... %p", funexp);
+
+	Data objname = Ex(funexp->left);
+	Data funname = Ex(funexp->right);
+	Node* fun;
+	if( strcmp(funname.value.strValue, "new") == 0){
+		fun = getConstructor(objname.value.strValue, ptrclasstable);
+	}
+	else{
+		debugmsg(EXECUTE, "objname = %s ... ... funname = %s ", objname.value.strValue, funname.value.strValue);
+		Data* ptrobj = getbyName(objname.value.strValue,*(node->ptrglobalvars), *(node->ptrlocalvars));
+		ObjectNode* obj = (ObjectNode*)ptrobj->value.ptrValue;
+		ClassNode* class = obj->type;
+		fun = getfunmember(funname.value.strValue, class);
+	}
+	debugmsg(EXECUTE,"queried  obj fun ... ..%p left = %p right = %p", fun, fun->left, fun->right);
+	//execute
+	Hash tmp = initHash(65536);
+	*(fun->ptrlocalvars) = tmp;
+	debugmsg(EXECUTE,"creating local vars ... ... %p = %p ", fun->ptrlocalvars, tmp);
+	if(node->left!=NULL){
+		Data params = ExGET(node->left);
+		ExPARAMS(fun->left, params.value.arrayValue);
+	}
+
+	debugmsg(EXECUTE,"executing fun ... ..%p", fun);
+	Data ret = Ex(fun);
+	debugmsg(EXECUTE,"return ... ...%s", toString(&ret));
+	debugmsg(EXECUTE,"freeing local vars ... ... ");
+	freeHash(tmp);
+	*(node->ptrlocalvars) = NULL;
+	return ret;
+}
+
+Data ExOBJVAR(Node* node){
+	debugmsg(EXECUTE, "executing OBJVAR ... ... %p", node);
+	Data objname = Ex(node->left);
+	Data varname = Ex(node->right);
+	Data* ptrobj = getbyName(objname.value.strValue,*(node->ptrglobalvars), *(node->ptrlocalvars));
+	ObjectNode* obj = (ObjectNode*)ptrobj->value.ptrValue;
+	Data* ptrret = getbyName(varname.value.strValue,*(obj->vartable),NULL);
+	Data ret = *ptrret;
+	return ret;
+}
+
 void freeNode(Node* node){
     debugmsg(FREE, "free node ... ... %p", node);
 	if(node->op == FUN){
@@ -241,6 +292,7 @@ Node* createInt(int value){
 }
 Node* createArray(ArrayUnit *arr){
 	debugmsg(CREATE,"create arr ... ... %p",arr);
+	if(arr == NULL) return NULL;
 	Node* ret = createEmptyNode();
 	ret->op =  GET;
 	ret->data = createArrayData(arr);
@@ -364,21 +416,39 @@ Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrglobalvars, 
 }
 Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash* ptrglobalvars){
 	Node* ret = createEmptyNode();
+	debugmsg(CREATE,"creating FUNCALL ... ...%p", ret);
 	ret->op = FUNCALL;
 	ret->left = paramslist;
-
-    //before modify
-//	Data* ptrfun = getItem(*funHash, name);
-//	Node* fun = (Node*)ptrfun->value.ptrValue;
-//	
-//	ret->right = fun;
-	//after modify
 	ret->right = createStr(name);
-
-
-	//////////done///
 	ret->ptrglobalvars = ptrglobalvars;
 	ret->ptrfuncs = funHash;
+	return ret;
+}
+Node* createOBJVAR(char* objname, char* varname, Hash* ptrglobalvars){
+	Node* ret = createEmptyNode();
+	debugmsg(CREATE,"creating OBJVAR ... ...%p", ret);
+	ret->ptrglobalvars = ptrglobalvars;
+	ret->op = OBJVAR;
+	ret->left = createStr(objname);
+	ret->right = createStr(varname);
+	return ret;
+}
+Node* createOBJFUN(char* objname, char* funname, Node* paramslist, Hash* ptrglobalvars){
+
+	Node* ret = createEmptyNode();
+	Node* right = createEmptyNode();
+	right->ptrglobalvars = ptrglobalvars;
+	right->op = FUNNAME;
+	right->left = createStr(objname);
+	debugmsg(CREATE,"obj name ... ...%p", right->left);
+	right->right = createStr(funname);
+	debugmsg(CREATE,"fun name ... ...%p", right->right);
+	right->ptrglobalvars = ptrglobalvars;
+	ret->op = OBJFUN;
+	ret->left = paramslist;
+	ret->right = right;
+	right->ptrglobalvars = ptrglobalvars;
+	debugmsg(CREATE,"creating OBJFUN ... ...%p left = %p right = %p", ret, ret->left, ret->right);
 	return ret;
 }
 
@@ -412,10 +482,18 @@ Data Ex(Node* node){
 			return ExDISPLAY(node);
 		case RET:
 			return ExRET(node);
+		case OBJFUN:
+			return ExOBJFUN(node);
+		case OBJVAR:
+			return ExOBJVAR(node);
 		default:
 			return EMPTY;   
 	}
 	return EMPTY;
+}
+
+void setClassHash(Hash* classhash){
+	ptrclasstable = classhash;
 }
 
 

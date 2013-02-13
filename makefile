@@ -7,16 +7,16 @@ SYNTAX = SyntaxNode
 OO = OONode
 TEST = Test
 GC = GC
-DEBUG =  -g
+DEBUG =  
 
 
 prog: lex.yy.c node.o hash.o dataunit.o debug.o classnode.o oosupport gc.o
-	$(CC) lex.yy.c node.o hash.o dataunit.o debug.o classnode.o gc.o -o $(PARSER) $(DEBUG)
+	$(CC) globdef.h lex.yy.c node.o hash.o dataunit.o debug.o classnode.o gc.o -o $(PARSER) $(DEBUG)
 
 lex.yy.c: ryt.l y.tab.c debug.h
 	$(LEX) ryt.l
 
-y.tab.c: ryt.y debug.h
+y.tab.c: ryt.y debug.h globdef.h
 	$(YACC) ryt.y
 
 

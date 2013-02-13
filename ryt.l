@@ -18,6 +18,7 @@ fun         fun
 
 %%
 {ws}              { }
+"."               { debugmsg(LEX,"DOT");return DOT;}
 "def"             { debugmsg(LEX,"DEF");return DEF;}
 "class"           { debugmsg(LEX,"CLASS");return CLASS;}
 
