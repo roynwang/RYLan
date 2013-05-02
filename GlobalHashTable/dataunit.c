@@ -166,7 +166,7 @@ Data* createVarData(char* name){
 	ret->value.varValue = name;
 	return ret;
 }
-Data* createStrData(char* value){
+Data* createStrData(const char* value){
 	Data* ret = createEmptyData();
 	ret->valueType = StrType;
 	ret->value.strValue  = value;

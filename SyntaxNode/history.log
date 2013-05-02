@@ -1,0 +1,3 @@
+gcc ../debug.h node.h simplenode.h simplenode.c -c
+gcc ../debug.h node.h funnode.h funnode.c -c
+

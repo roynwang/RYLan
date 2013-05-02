@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  retnode.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        Created:  02/14/2013 11:18:25 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,16 +16,15 @@
  * =====================================================================================
  */
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
 
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
+#ifndef  RETNODE_INC
+#define  RETNODE_INC
 
-void debugmsg(int level, char* fmt, ...);
+#include "node.h"
+#include "memory.h"
 
-#endif   /* ----- #ifndef DEBUG_INC  ----- */
+Node* createRET(Node* value);
+Data ExRET(Node* node);
+
+
+#endif   /* ----- #ifndef RETNODE_INC  ----- */

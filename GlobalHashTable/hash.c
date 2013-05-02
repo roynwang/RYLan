@@ -80,6 +80,7 @@ void removeItem(Hash hash,const char* name){
 	hash->table[getBKDRHash(name,hash->size)] = NULL;
 }
 void* getItem(Hash hash, const char* name){
+	if(hash == NULL ) return NULL;
 	return hash->table[getBKDRHash(name, hash->size)];
 }
 

@@ -11,7 +11,7 @@ DEBUG =
 
 
 prog: lex.yy.c node.o hash.o dataunit.o debug.o classnode.o oosupport gc.o
-	$(CC) globdef.h lex.yy.c node.o hash.o dataunit.o debug.o classnode.o gc.o -o $(PARSER) $(DEBUG)
+	$(CC) globdef.h lex.yy.c node.o hash.o dataunit.o debug.o classnode.o gc.o objectnode.o -o $(PARSER) $(DEBUG)
 
 lex.yy.c: ryt.l y.tab.c debug.h
 	$(LEX) ryt.l

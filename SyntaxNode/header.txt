@@ -1,0 +1,1 @@
+gcc syntaxnode.h assignnode.h calnode.h displaynode.h funcallnode.h funnode.h ifnode.h logicnode.h loopnode.h node.h objvarnode.h paramnode.h retnode.h simplenode.h stmtnode.h

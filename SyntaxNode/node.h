@@ -21,6 +21,7 @@
 
 #include "../GlobalHashTable/dataunit.h"
 #include "../GlobalHashTable/hash.h"
+#include "../debug.h"
 typedef enum { 
 	NONE,
 	ASSIGN, GET,
@@ -30,49 +31,27 @@ typedef enum {
 	STMT,
 	ST, LT, NS, NL, EQ,
 	PARAMS,
-	FUN,
-	FUNCALL,
+	FUN,FUNCALL,
+	OBJFUN, OBJVAR,
 	DISPLAY,
 	RET,
-	OBJVAR,
-	FUNNAME,
-	OBJFUN
 }OpEnum;
+typedef struct {
+	Hash* varsenv;
+	Hash* funsenv;
+}RuntimeEnv;
 typedef struct _Node{
 	int op;
 	char ismarkedforfree;
 	struct _Node* left;
 	struct _Node* right;
 	Data* data;
-	Hash* ptrlocalvars;
-	Hash* ptrglobalvars;
-	Hash* ptrfuncs;
+	RuntimeEnv* env;
 }Node;
 
+
 Data Ex(Node* node);
-void freeNode(Node* node);
-Node* createVar(char* name);
-Node* createStr(char* value);
-Node* createInt(int value);
-Node* createArray(ArrayUnit *arr);
-
-Node* createComplex(int op , Node* left, Node* right, Hash *ptrlocalvars);
-Node* createIF(Node* expr, Node* thenstmt, Hash *ptrlocalvars);
-Node* createFUN(char* name, Node* paramslist, Node* stmts, Hash *ptrlocalvars, Hash *ptrfunhash);
-Node* createSTMTS(Node* stmt, Node* stmts, Hash *ptrlocalvars);
-Node* createPARAMS(Node* param, Node* params);
-Node* createPARAM(char* name, Hash *ptrlocalvars);
-Node* createFUNCALL(Hash *funHash, char* name, Node* paramslist, Hash *ptrlocalvars);
-Node* createDISPLAY(Node* value, Hash* ptrlocalvars);
-Node* createEXPR(Node* node, Hash* ptrlocalvars);
-Node* createWHILE(Node* judge, Node* body, Hash *ptrlocalvars);
-Node* createFOR(Node* initial, Node* judge, Node* step, Node* body, Hash *ptrlocalvars);
-Node* createRET(Node* value, Hash* ptrglobalvars);
-Node* createOBJVAR(char* objname, char* varname, Hash* ptrglobalvars);
-Node* createOBJFUN(char* objname, char* funname, Node* paramslist, Hash* ptrglobalvars);
-
-Data ExPARAMS(Node* node, ArrayUnit* actualParams);
-
-void setClassHash(Hash* classhash);
+Node* createEmptyNode();
+Data* getbyName(char* name, Hash globalhash, Hash localhash);
 
 #endif   /* ----- #ifndef NODE_INC  ----- */

@@ -11,7 +11,7 @@ def class TEST{
 def class MAIN{
 	def main(){
 		obj = TEST.new();
-		a = 1;
+		a = obj.a;
 		print(a);
 	}
 }

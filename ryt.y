@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "SyntaxNode/node.h"
+#include "SyntaxNode/syntaxnode.h"
 #include "GlobalHashTable/hash.h"
 #include "OONode/classnode.h"
 #include "debug.h"
@@ -22,12 +22,12 @@ void  yyerror(char*s);
 	Node *node;
 	ArrayUnit *arrelem;
 }
-%token SEMC DEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN CLASS DOT
+%token SEMC DEF BLOCKSTART BLOCKEND RUN LP RP COMMA PRINT WHILELOOP IFSTMT ELSESTMT FORLOOP RETURN CLASS DOT LR RR
 %right TOKENASSIGN    /*less priority than calculate OP*/ 
 %left OPADD OPST
 %token <str>  symbol strvalue
 %token <value> intvalue
-%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt classdefs classdef classbody classelements classelement vardef simpleexpr objvar objcall
+%type  <node> stmt stmts param params fundef arrayexpr expr stmtsblock whileloop forstmt returnstmt classdefs classdef classbody defs def vardef simpleexpr funcallexpr
 %type  <arrelem> arrayelement arrayelements
 %%
 scope          :  classdefs                                                {}
@@ -35,21 +35,21 @@ scope          :  classdefs                                                {}
 classdefs      :  classdefs classdef                                       {}
                |  classdef                                                 {}
 			   ;
-classdef       :  DEF CLASS symbol classbody                               {registerclass($3,*ptrclasstable,curclass); curclass = createClassNode(NULL);}
+classdef       :  DEF CLASS symbol classbody                               {}
                ;
-classbody      :  BLOCKSTART classelements BLOCKEND                        {}
+classbody      :  BLOCKSTART defs BLOCKEND                                 {}
                ;
-classelements  :  classelements classelement                               {/*nothing*/} |  classelement                                             {/*nothing*/}
+defs           :  defs def                                                 {/*nothing*/}
+               |  def                                                      {/*nothing*/}
 			   ;
 
-classelement   :  fundef                                                   {}
+def            :  fundef                                                   {}
                |  vardef                                                   {/*register the var*/}
 			   ;
-vardef         :  DEF symbol SEMC                                          { registervar($2, &EMPTY,curclass);  }
+vardef         :  DEF symbol SEMC                                          { }
 			   ;
 			   
-fundef         :  DEF symbol LP params RP stmtsblock                       { $$ = createFUN($2,$4,$6, curclass->vartable,curclass->funtable);
-  registerfun($2,$$, curclass);
+fundef         :  DEF symbol LP params RP stmtsblock                       { $$ = createFUN($2,$4,$6);
 }
                ;
 
@@ -58,31 +58,33 @@ params         :  param  COMMA params                                     {$$ = 
 			   |                                                          {$$ = NULL;}
                ;
 
-param          :  symbol                                                  {$$ = createPARAM($1,curclass->vartable);}
+param          :  symbol                                                  {$$ = createPARAM($1);}
                ;
 
 stmtsblock     :  BLOCKSTART stmts BLOCKEND                               {$$ = $2;}
                |  stmt                                                    {$$ = $1;}
                ;
 
-stmts          :  stmt stmts                                              {$$ = createSTMTS($1,$2,curclass->vartable);}
-               |  stmt                                                    {$$ = createSTMTS($1,NULL, curclass->vartable);}
+stmts          :  stmt stmts                                              {$$ = createSTMT($1,$2);}
+               |  stmt                                                    {$$ = createSTMT($1,NULL);}
 			   ;
 
 stmt		   :  expr SEMC                                               {$$ = $1;}
-               |  objcall SEMC                                            {$$ = $1;}
                |  returnstmt                                              {$$ = $1;}
                |  whileloop                                               {$$ = $1;}
-
 			   |  forstmt                                                 {$$ = $1;}
 			   ;
-returnstmt     :  RETURN expr SEMC                                        {$$ = createRET($2,curclass->vartable);}
-
-whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5,curclass->vartable);}
+returnstmt     :  RETURN expr SEMC                                        {$$ = createRET($2);}
                ;
 
-forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock      {$$ = createFOR($3, $5, $7, $9, curclass->vartable);}
+whileloop      :  WHILELOOP LP expr RP stmtsblock                         {$$ = createWHILE($3,$5);}
                ;
+
+forstmt        :  FORLOOP LP  expr SEMC expr SEMC expr RP stmtsblock      {$$ = createFOR($3, $5, $7, $9);}
+               ;
+funcallexpr    :  symbol DOT symbol arrayexpr                             {}
+               |  symbol arrayexpr
+			   ;
 
 arrayexpr      :  LP arrayelements RP                                     {$$ = createArray($2);}
                ;
@@ -94,22 +96,14 @@ arrayelement   :  symbol                                                  {Data*
                |  intvalue                                                {$$ = createArrayUnit(createIntData($1));}
 			   ;
 expr           :  simpleexpr                                              {$$ = $1;} 
-               |  objvar                                                  {$$ = $1;}
-               |  objcall                                                 {$$ = $1;  /*cause conflicts!!!!!!!!!!!*/}
-			   |  symbol TOKENASSIGN expr       /*var assign */           {$$ = createComplex(ASSIGN,createVar($1), $3,curclass->vartable);}
                |  symbol                                                  {$$ = createVar($1);}
-               |  expr OPADD expr                                         {$$ = createComplex(ADD,$1,$3,curclass->vartable);}
-			   |  expr OPST expr                                          {$$ = createComplex(ST, $1,$3,curclass->vartable);}
-			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3),curclass->vartable);}
-               |  symbol arrayexpr /*fun cal*/                            {$$ = createFUNCALL(curclass->funtable,$1,$2,curclass->vartable);}
+			   |  PRINT LP symbol RP 		                              {$$ = createDISPLAY(createVar($3));}
+               |  funcallexpr /*fun cal*/                                 {$$ = $1;}
                ;  
+
 simpleexpr     :  intvalue                                                {$$ = createInt($1);}
                |  strvalue                                                {$$ = createStr($1);} 
 			   ;
-objvar         :  symbol DOT symbol                                       {$$ = createOBJVAR($1,$3,curclass->vartable);}
-			   ;
-objcall        :  symbol DOT symbol arrayexpr                             {$$ = createOBJFUN($1,$3,$4,curclass->vartable);}
-
 %%
 
 int main(){	
