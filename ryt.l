@@ -18,8 +18,13 @@ fun         fun
 
 %%
 {ws}              { }
+"."               { debugmsg(LEX,"DOT");return DOT;}
+"def"             { debugmsg(LEX,"DEF");return DEF;}
+"class"           { debugmsg(LEX,"CLASS");return CLASS;}
+"["               { debugmsg(LEX, "["); return LR;}
+"]"               { debugmsg(LEX, "]"); return RR;}
+
 "return"          { debugmsg(LEX,"RETURN"); return RETURN;}
-"fun"             { debugmsg(LEX,"FUN");return FUNDEF;}
 "<"               { debugmsg(LEX,"<");return OPST;}
 "while"           { debugmsg(LEX,"WHILELOOP");return WHILELOOP;}
 "if"              { debugmsg(LEX,"IFSTMT"); return IFSTMT;}

@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  objectnode.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        02/08/2013 09:21:43 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,16 +16,17 @@
  * =====================================================================================
  */
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
+#ifndef  OBJECTNODE_INC
+#define  OBJECTNODE_INC
 
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
+#include "../GlobalHashTable/hash.h"
+#include "classnode.h"
 
-void debugmsg(int level, char* fmt, ...);
+typedef struct _ObjectNode{
+	Hash* vartable;
+	ClassNode* type;
+} ObjectNode;
 
-#endif   /* ----- #ifndef DEBUG_INC  ----- */
+ObjectNode* createObject(char* classname, Hash classtable);
+	
+#endif   /* ----- #ifndef OBJECTNODE_INC  ----- */

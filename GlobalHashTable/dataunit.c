@@ -20,6 +20,7 @@
 #include "dataunit.h"
 #include <memory.h>
 #include "../debug.h"
+#include "../GC/gc.h"
 
 Data trueData = {valueType: True};
 Data falseData = {valueType: False};
@@ -40,7 +41,6 @@ char* catnewstr(const char* a, const char* b){
 
 
 void typecheck(Data* left, Data* right){
-
 	debugmsg(EXECUTE,"type checking ... ... %s %s", toString(left), toString(right) );
 	if(left->valueType!= right->valueType){
 		exit(0);
@@ -133,6 +133,7 @@ Data* createEmptyData(){
 	Data* ret = (Data*)malloc(sizeof(Data));
 	ret->valueType = Empty;
 	ret->isOnHeap = 0;
+	addres(DATATYPE, ret);
 	return ret;
 }
 char* toString(Data* data){
@@ -165,7 +166,7 @@ Data* createVarData(char* name){
 	ret->value.varValue = name;
 	return ret;
 }
-Data* createStrData(char* value){
+Data* createStrData(const char* value){
 	Data* ret = createEmptyData();
 	ret->valueType = StrType;
 	ret->value.strValue  = value;
@@ -209,7 +210,7 @@ void freeArray(ArrayUnit* arr){
 	}
 }
 void freeData(Data* data){
-	debugmsg(DATASTRUCTURE, "free data %p",data, data->valueType );
+	debugmsg(FREE, "free data %p",data, data->valueType );
 	switch(data->valueType){
 		case StrType:
 			if(data->isOnHeap == 1)

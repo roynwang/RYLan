@@ -48,7 +48,7 @@ Data falseData;
 Data emptyData;
 
 Data* createIntData(int value);
-Data* createStrData(char* value);
+Data* createStrData(const char* value);
 Data* createVarData(char* name);
 Data* createArrayData(ArrayUnit* arr);
 Data* createPtrData(void* value);

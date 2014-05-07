@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  logicnode.c
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        Created:  02/14/2013 10:00:59 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,17 +15,12 @@
  *
  * =====================================================================================
  */
+#include <stdlib.h>
+#include "logicnode.h"
+Node* createNOT(Node* expr){
+	Node* ret = createEmptyNode();
+	ret->op =  NOT;
+	ret->left = expr;
+	return ret;
+}
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
-
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
-
-void debugmsg(int level, char* fmt, ...);
-
-#endif   /* ----- #ifndef DEBUG_INC  ----- */

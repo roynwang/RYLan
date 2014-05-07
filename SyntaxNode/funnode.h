@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  funnode.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        Created:  02/14/2013 08:36:45 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,16 +16,13 @@
  * =====================================================================================
  */
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
+#ifndef  FUNNODE_INC
+#define  FUNNODE_INC
 
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
+#include "node.h"
 
-void debugmsg(int level, char* fmt, ...);
+Node* createFUN(const char* name, Node* params, Node* stmts);
+Data ExFUN(Node* node, RuntimeEnv* env);
 
-#endif   /* ----- #ifndef DEBUG_INC  ----- */
+#endif   /* ----- #ifndef FUNNODE_INC  ----- */
+

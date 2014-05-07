@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  ifnode.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        Created:  02/14/2013 09:43:29 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,16 +16,11 @@
  * =====================================================================================
  */
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
+#ifndef  IFNODE_INC
+#define  IFNODE_INC
+#include "node.h"
 
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
-
-void debugmsg(int level, char* fmt, ...);
-
-#endif   /* ----- #ifndef DEBUG_INC  ----- */
+Node* createIF(Node* expr, Node* thenstmt);
+Data ExIF(Node* node);
+Node* createIFELSE(Node* expr, Node* thenstmt, Node* elsestmt);
+#endif   /* ----- #ifndef IFNODE_INC  ----- */

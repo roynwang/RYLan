@@ -1,0 +1,17 @@
+def class TEST{
+	def a ;
+	def new (){
+		a = 1111;
+		print(a);
+	}
+	def geta(){
+		return a;
+	}
+}
+def class MAIN{
+	def main(){
+		obj = TEST.new();
+		a = obj.a;
+		print(a);
+	}
+}

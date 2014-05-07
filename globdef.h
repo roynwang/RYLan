@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  debug.h
+ *       Filename:  globdef.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  02/04/2013 11:08:37 PM
+ *        Created:  02/13/2013 10:05:26 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,17 +15,12 @@
  *
  * =====================================================================================
  */
+#include "GlobalHashTable/hash.h"
+#include "SyntaxNode/node.h"
+#include "OONode/classnode.h"
 
-#ifndef  DEBUG_INC
-#define  DEBUG_INC
-#define DEBUGLEVEL 63 
-//#define DEBUGLEVEL 0
+static char* curFun ;
+static Hash* ptrclasstable ;
+static Node* mainfunc ;
+static ClassNode* curclass ;
 
-#include <stdarg.h>
-typedef enum{
-	LEX = 1,  YACC= 2, DATASTRUCTURE = 4, EXECUTE = 8, FREE = 16, CREATE = 32
-}loglevel;
-
-void debugmsg(int level, char* fmt, ...);
-
-#endif   /* ----- #ifndef DEBUG_INC  ----- */

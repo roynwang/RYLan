@@ -21,7 +21,8 @@
 
 #include <stddef.h>
 //for BKDR hash
-#define BKDRSEED 131; // the magic number, 31, 131, 1313, 13131, etc.. 
+#define BKDRSEED 131 // the magic number, 31, 131, 1313, 13131, etc.. 
+#define HASHSIZE 65536
 typedef struct {
 	size_t size;
 	void** table;
@@ -30,6 +31,7 @@ typedef struct {
 size_t getBKDRHash(const char* input, size_t hashsize);
 
 Hash initHash(size_t size);
+Hash dupHash(Hash hash);
 void freeHash(Hash hash);
 
 void setItem(Hash hash, const char* name, void* value);
